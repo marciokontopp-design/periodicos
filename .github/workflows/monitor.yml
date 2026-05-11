@@ -1,0 +1,43 @@
+name: Monitor de Periódicos
+
+on:
+  schedule:
+    # Roda toda segunda-feira às 8h (horário de Brasília = 11h UTC)
+    - cron: "0 11 * * 1"
+  workflow_dispatch:  # permite rodar manualmente pelo painel do GitHub
+
+jobs:
+  monitorar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: pip install feedparser
+
+      - name: Restaurar estado anterior (cache)
+        uses: actions/cache@v4
+        with:
+          path: estado_visto.json
+          key: estado-periodicos-${{ github.run_id }}
+          restore-keys: |
+            estado-periodicos-
+
+      - name: Rodar monitor
+        env:
+          EMAIL_SENHA: ${{ secrets.EMAIL_SENHA }}
+        run: python monitor_periodicos.py
+
+      - name: Salvar estado atualizado
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: estado_visto.json
+          key: estado-periodicos-${{ github.run_id }}
