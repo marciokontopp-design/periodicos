@@ -1,7 +1,7 @@
 {
   "email": {
-    "destinatario": "seu@email.com",
-    "remetente": "seu@gmail.com",
+    "destinatario": "marciokontopp@gmail.com",
+    "remetente": "marciokontopp@gmail.com",
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587
   },
