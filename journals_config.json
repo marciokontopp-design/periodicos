@@ -6,36 +6,44 @@
     "smtp_port": 587
   },
   "periodicidade": "weekly",
+  "cron": "0 11 * * 1",
   "revistas": [
-    {
-      "nome": "Journal of Information Science",
-      "rss": "https://journals.sagepub.com/action/showFeed?ui=0&uiKey=84b5b44bcf5b16cd&type=etoc&feed=rss&jc=jisb",
-      "base": "SAGE",
-      "monitorar_cfp": true
-    },
-    {
-      "nome": "Scientometrics",
-      "rss": "https://link.springer.com/search.rss?query=&search-within=Journal&facet-journal-id=11192",
-      "base": "Springer",
-      "monitorar_cfp": true
-    },
     {
       "nome": "Research Policy",
       "rss": "https://rss.sciencedirect.com/publication/science/00487333",
-      "base": "Elsevier",
+      "base": "Elsevier / ScienceDirect",
+      "issn": "0048-7333",
       "monitorar_cfp": true
     }
   ],
   "palavras_chave": [
-    "open access",
-    "bibliometrics",
-    "peer review",
-    "research evaluation",
-    "scholarly communication"
+    "climate governance",
+    "urban climate governance",
+    "regional climate governance",
+    "climate adaptation",
+    "urban adaptation",
+    "policy capacity",
+    "state capacity",
+    "institutional capacity",
+    "multilevel governance",
+    "regional governance",
+    "intermunicipal cooperation",
+    "public consortia",
+    "urban resilience",
+    "climate resilience",
+    "municipal climate policy",
+    "local climate policy",
+    "participatory governance",
+    "collaborative governance",
+    "governança climática",
+    "adaptação climática",
+    "capacidades estatais",
+    "governança regional",
+    "consórcios intermunicipais"
   ],
   "escopo_busca": {
     "titulos": true,
     "resumos": true,
-    "palavras_chave_artigo": false
+    "palavras_chave_artigo": true
   }
 }
