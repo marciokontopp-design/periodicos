@@ -1,0 +1,41 @@
+{
+  "email": {
+    "destinatario": "seu@email.com",
+    "remetente": "seu@gmail.com",
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587
+  },
+  "periodicidade": "weekly",
+  "revistas": [
+    {
+      "nome": "Journal of Information Science",
+      "rss": "https://journals.sagepub.com/action/showFeed?ui=0&uiKey=84b5b44bcf5b16cd&type=etoc&feed=rss&jc=jisb",
+      "base": "SAGE",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Scientometrics",
+      "rss": "https://link.springer.com/search.rss?query=&search-within=Journal&facet-journal-id=11192",
+      "base": "Springer",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Research Policy",
+      "rss": "https://rss.sciencedirect.com/publication/science/00487333",
+      "base": "Elsevier",
+      "monitorar_cfp": true
+    }
+  ],
+  "palavras_chave": [
+    "open access",
+    "bibliometrics",
+    "peer review",
+    "research evaluation",
+    "scholarly communication"
+  ],
+  "escopo_busca": {
+    "titulos": true,
+    "resumos": true,
+    "palavras_chave_artigo": false
+  }
+}

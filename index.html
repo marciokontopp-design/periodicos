@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monitor de Periódicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #E2DDD5;
+  --border2: #C8C2B8;
+  --text: #1A1714;
+  --text2: #6B6560;
+  --text3: #9E9890;
+  --teal: #1D6B5A;
+  --teal-light: #E8F3F0;
+  --teal-mid: #2D9B82;
+  --amber: #8B5E14;
+  --amber-light: #FBF3E3;
+  --blue: #1B4F8A;
+  --blue-light: #E8EEF8;
+  --red: #8B2020;
+  --red-light: #FAECEC;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── Layout ── */
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  background: var(--text);
+  color: #F7F5F0;
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 0 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 19px;
+  color: #F7F5F0;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.sidebar-logo p {
+  font-size: 11px;
+  color: rgba(247,245,240,0.45);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  padding: 1.5rem 0;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 1.5rem;
+  font-size: 14px;
+  color: rgba(247,245,240,0.55);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: color 0.15s, background 0.15s;
+  border-left: 2px solid transparent;
+}
+
+.nav-item:hover { color: #F7F5F0; background: rgba(255,255,255,0.05); }
+.nav-item.active { color: #F7F5F0; background: rgba(255,255,255,0.08); border-left-color: var(--teal-mid); }
+
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+.nav-item.active svg { opacity: 1; }
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-footer p { font-size: 11px; color: rgba(247,245,240,0.3); line-height: 1.5; }
+
+/* ── Main ── */
+.main {
+  overflow-y: auto;
+  padding: 2.5rem 2.5rem 4rem;
+  max-width: 860px;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+.page-header { margin-bottom: 2rem; }
+.page-header h2 { font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400; color: var(--text); line-height: 1.2; }
+.page-header p { font-size: 14px; color: var(--text2); margin-top: 5px; }
+
+/* ── Metrics ── */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.metric-label { font-size: 11px; color: var(--text3); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+.metric-val { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); line-height: 1; }
+.metric-val.small { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; padding-top: 4px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+.card:hover { border-color: var(--border2); }
+
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.card-title { font-size: 15px; font-weight: 500; color: var(--text); }
+.card-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+/* ── Badges ── */
+.badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+.badge-teal { background: var(--teal-light); color: var(--teal); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-gray { background: var(--surface2); color: var(--text2); }
+
+/* ── Buttons ── */
+button { font-family: 'Outfit', sans-serif; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-dark { background: var(--text); color: var(--bg); }
+.btn-dark:hover { background: #2d2925; }
+
+.btn-outline { background: transparent; color: var(--text2); border-color: var(--border2); }
+.btn-outline:hover { background: var(--surface2); color: var(--text); }
+
+.btn-teal { background: var(--teal); color: #E8F3F0; }
+.btn-teal:hover { background: var(--teal-mid); }
+
+.btn-ghost { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px 6px; border-radius: 6px; }
+.btn-ghost:hover { color: var(--red); background: var(--red-light); }
+
+/* ── Form elements ── */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
+.form-hint { font-size: 11px; color: var(--text3); margin-top: 5px; }
+
+input[type="text"], input[type="url"], input[type="email"], select, textarea {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--teal-mid);
+  box-shadow: 0 0 0 3px rgba(45,155,130,0.12);
+}
+
+/* ── Toggle ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { color: var(--text); }
+.toggle-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+
+.toggle { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.tog-track { position: absolute; inset: 0; background: var(--border2); border-radius: 11px; cursor: pointer; transition: background 0.2s; }
+.tog-track:before { content: ''; position: absolute; width: 15px; height: 15px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle input:checked + .tog-track { background: var(--teal-mid); }
+.toggle input:checked + .tog-track:before { transform: translateX(17px); }
+
+/* ── Keyword pills ── */
+.kw-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.kw-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 5px 12px; font-size: 13px; color: var(--text);
+}
+.kw-pill button { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; line-height: 1; padding: 0; transition: color 0.15s; }
+.kw-pill button:hover { color: var(--red); }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 3rem 2rem; color: var(--text2); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty p { font-size: 14px; line-height: 1.6; }
+
+/* ── Journal icon ── */
+.j-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; flex-shrink: 0;
+  background: var(--teal-light); color: var(--teal);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Export section ── */
+.step-card {
+  background: var(--teal-light);
+  border: 1px solid rgba(29,107,90,0.2);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--teal); color: #E8F3F0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 1px;
+}
+.step-num.done { background: var(--teal-mid); }
+
+.code-box {
+  background: #1A1714;
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #C8C2B8;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 10px;
+  line-height: 1.7;
+}
+
+.export-main {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Modal ── */
+.modal-wrap {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,23,20,0.5);
+  z-index: 200;
+  align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modal-wrap.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  width: 480px; max-width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--border2);
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+
+.btn-close { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 22px; line-height: 1; padding: 2px; }
+.btn-close:hover { color: var(--text); }
+
+/* ── Alert item ── */
+.alert-item { border-left: 3px solid; padding: 12px 0 12px 16px; margin-bottom: 16px; }
+.alert-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.alert-meta { font-size: 12px; color: var(--text3); }
+
+/* ── Inline row ── */
+.inline-row { display: flex; gap: 8px; }
+.inline-row input { flex: 1; }
+
+/* ── Section title ── */
+.sec-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 12px; }
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { flex-direction: row; flex-wrap: wrap; padding: 1rem; }
+  .sidebar-logo { border-bottom: none; padding-bottom: 0; }
+  .sidebar-nav { display: flex; flex-wrap: wrap; padding: 0; width: 100%; }
+  .sidebar-footer { display: none; }
+  .nav-item { border-left: none; border-bottom: 2px solid transparent; padding: 8px 12px; }
+  .nav-item.active { border-bottom-color: var(--teal-mid); background: transparent; }
+  .main { padding: 1.5rem 1rem 3rem; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Monitor de<br>Periódicos</h1>
+    <p>Painel de configuração</p>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="goTo('journals')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Revistas
+    </button>
+    <button class="nav-item" onclick="goTo('keywords')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Palavras-chave
+    </button>
+    <button class="nav-item" onclick="goTo('config')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurações
+    </button>
+    <button class="nav-item" onclick="goTo('export')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar config
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <p>Configure as revistas e palavras-chave aqui, exporte o <code>journals_config.json</code> e suba para o GitHub.</p>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main">
+
+  <!-- Métricas -->
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Revistas</div><div class="metric-val" id="m-journals">0</div></div>
+    <div class="metric"><div class="metric-label">Palavras-chave</div><div class="metric-val" id="m-keywords">0</div></div>
+    <div class="metric"><div class="metric-label">E-mail</div><div class="metric-val small" id="m-email">—</div></div>
+    <div class="metric"><div class="metric-label">Periodicidade</div><div class="metric-val small" id="m-freq">Semanal</div></div>
+  </div>
+
+  <!-- PAGE: Revistas -->
+  <div id="page-journals" class="page active">
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <h2>Revistas cadastradas</h2>
+          <p>Adicione os periódicos que deseja monitorar</p>
+        </div>
+        <button class="btn btn-dark" onclick="openModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar revista
+        </button>
+      </div>
+    </div>
+    <div id="journal-list"></div>
+  </div>
+
+  <!-- PAGE: Palavras-chave -->
+  <div id="page-keywords" class="page">
+    <div class="page-header">
+      <h2>Palavras-chave</h2>
+      <p>Serão buscadas em títulos e resumos dos novos artigos</p>
+    </div>
+    <div class="card">
+      <p class="sec-title">Adicionar termos</p>
+      <div class="inline-row">
+        <input type="text" id="kw-input" placeholder="Ex: bibliometrics, open access — separe por vírgula" onkeydown="if(event.key==='Enter')addKeyword()" />
+        <button class="btn btn-dark" onclick="addKeyword()">Adicionar</button>
+      </div>
+      <div id="kw-container"><div class="kw-list" style="margin-top:8px;color:var(--text3);font-size:13px">Nenhuma palavra-chave ainda.</div></div>
+    </div>
+    <div class="card" style="margin-top:4px">
+      <p class="sec-title">Escopo da busca</p>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Títulos dos artigos</div></div>
+        <label class="toggle"><input type="checkbox" id="scope-title" checked /><span class="tog-track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Resumos (abstracts)</div></div>
+        <label class="toggle"><input type="checkbox" id="scope-abstract" checked /><span class="tog-track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Palavras-chave do artigo</div></div>
+        <label class="toggle"><input type="checkbox" id="scope-kw" /><span class="tog-track"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: Configurações -->
+  <div id="page-config" class="page">
+    <div class="page-header">
+      <h2>Configurações</h2>
+      <p>E-mail e periodicidade dos alertas</p>
+    </div>
+    <div class="card">
+      <p class="sec-title">E-mail</p>
+      <div class="form-group">
+        <label class="form-label">Destinatário dos alertas</label>
+        <input type="email" id="email-dest" placeholder="seu@email.com" oninput="updateMetrics()" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Conta Gmail remetente</label>
+        <input type="email" id="email-from" placeholder="conta@gmail.com" />
+        <p class="form-hint">Use uma senha de app do Gmail — veja instruções no README.</p>
+      </div>
+    </div>
+    <div class="card">
+      <p class="sec-title">Periodicidade padrão</p>
+      <div class="form-group" style="margin-bottom:0">
+        <select id="global-freq" onchange="updateMetrics()">
+          <option value="daily">Diariamente (todo dia às 8h, horário de Brasília)</option>
+          <option value="weekly" selected>Semanalmente (toda segunda às 8h)</option>
+          <option value="biweekly">Quinzenalmente</option>
+          <option value="monthly">Mensalmente (todo dia 1º)</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <p class="sec-title">Tipos de alerta</p>
+      <div class="toggle-row">
+        <div class="toggle-label">Novos artigos e edições</div>
+        <label class="toggle"><input type="checkbox" id="alert-issues" checked /><span class="tog-track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Correspondências de palavras-chave</div>
+        <label class="toggle"><input type="checkbox" id="alert-kw" checked /><span class="tog-track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Chamadas de artigos (call for papers)</div>
+        <label class="toggle"><input type="checkbox" id="alert-cfp" checked /><span class="tog-track"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: Exportar -->
+  <div id="page-export" class="page">
+    <div class="page-header">
+      <h2>Exportar configuração</h2>
+      <p>Baixe o arquivo e coloque no seu repositório do GitHub</p>
+    </div>
+
+    <div class="export-main">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:500;color:var(--text)">journals_config.json</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Gerado a partir do painel</div>
+        </div>
+        <button class="btn btn-teal" onclick="exportConfig()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar arquivo
+        </button>
+      </div>
+      <div id="config-preview" class="code-box">Configure ao menos uma revista para visualizar...</div>
+    </div>
+
+    <div class="card">
+      <p class="sec-title">Como usar</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="step-card" style="padding:1rem;border-radius:var(--radius);margin-bottom:0">
+          <div class="step-num">1</div>
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--teal)">Baixe o arquivo acima</div>
+            <div style="font-size:12px;color:var(--teal);opacity:.8;margin-top:2px">Substitui o <code>journals_config.json</code> de exemplo no repositório</div>
+          </div>
+        </div>
+        <div style="padding-left:4px">
+          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">2</span>Suba para o repositório GitHub</div>
+          <div style="font-size:12px;color:var(--text3);padding-left:36px">Arraste o arquivo para a página do repositório ou use "Add file → Upload"</div>
+        </div>
+        <div style="padding-left:4px">
+          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">3</span>Teste rodando manualmente</div>
+          <div style="font-size:12px;color:var(--text3);padding-left:36px">Actions → Monitor de Periódicos → Run workflow</div>
+        </div>
+        <div style="padding-left:4px">
+          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-teal" style="margin-right:6px">✓</span>Pronto — roda automaticamente</div>
+          <div style="font-size:12px;color:var(--text3);padding-left:36px">Na periodicidade configurada, você receberá o e-mail com as novidades</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:4px">
+      <p class="sec-title">Atualizar no futuro</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7">Adicionou uma nova revista? Volte aqui, edite, baixe o arquivo e substitua no GitHub. O script usará a versão mais recente na próxima execução — sem precisar alterar nada no código.</p>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Modal: Adicionar revista -->
+<div class="modal-wrap" id="modal-wrap">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cadastrar revista</div>
+      <button class="btn-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nome da revista *</label>
+      <input type="text" id="j-name" placeholder="Ex: Journal of Information Science" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL do RSS *</label>
+      <input type="url" id="j-rss" placeholder="https://..." />
+      <p class="form-hint">Procure o ícone RSS no site da revista. O README tem o padrão de cada editora.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Editora / base</label>
+      <select id="j-base">
+        <option value="">Selecione...</option>
+        <option>Elsevier / ScienceDirect</option>
+        <option>Springer / Nature</option>
+        <option>Wiley</option>
+        <option>SAGE Publications</option>
+        <option>Taylor & Francis</option>
+        <option>MDPI</option>
+        <option>SciELO</option>
+        <option>Outro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ISSN (opcional)</label>
+      <input type="text" id="j-issn" placeholder="0000-0000" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Periodicidade de verificação</label>
+      <select id="j-freq">
+        <option value="daily">Diária</option>
+        <option value="weekly" selected>Semanal</option>
+        <option value="biweekly">Quinzenal</option>
+        <option value="monthly">Mensal</option>
+      </select>
+    </div>
+    <div class="toggle-row" style="margin-bottom:1.5rem">
+      <div><div class="toggle-label">Monitorar call for papers</div><div class="toggle-sub">Detecta chamadas de artigos e special issues</div></div>
+      <label class="toggle"><input type="checkbox" id="j-cfp" checked /><span class="tog-track"></span></label>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-dark" onclick="saveJournal()">Salvar revista</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FREQ_LABEL = { daily:'Diária', weekly:'Semanal', biweekly:'Quinzenal', monthly:'Mensal' };
+const FREQ_LABEL_LONG = { daily:'Diária', weekly:'Semanal', biweekly:'Quinzenal', monthly:'Mensal' };
+const FREQ_CRON = { daily:'0 11 * * *', weekly:'0 11 * * 1', biweekly:'0 11 */14 * *', monthly:'0 11 1 * *' };
+
+let journals = JSON.parse(localStorage.getItem('mp_journals') || '[]');
+let keywords = JSON.parse(localStorage.getItem('mp_keywords') || '[]');
+
+function save() {
+  localStorage.setItem('mp_journals', JSON.stringify(journals));
+  localStorage.setItem('mp_keywords', JSON.stringify(keywords));
+}
+
+function goTo(name) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  const names = ['journals','keywords','config','export'];
+  document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'export') refreshPreview();
+}
+
+function openModal() {
+  ['j-name','j-rss','j-issn'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('j-base').value = '';
+  document.getElementById('j-freq').value = 'weekly';
+  document.getElementById('j-cfp').checked = true;
+  document.getElementById('modal-wrap').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-wrap').classList.remove('open'); }
+
+function saveJournal() {
+  const name = document.getElementById('j-name').value.trim();
+  const rss = document.getElementById('j-rss').value.trim();
+  if (!name || !rss) { alert('Preencha o nome e a URL do RSS.'); return; }
+  journals.push({
+    id: Date.now(), name, rss,
+    base: document.getElementById('j-base').value,
+    issn: document.getElementById('j-issn').value.trim(),
+    freq: document.getElementById('j-freq').value,
+    cfp: document.getElementById('j-cfp').checked,
+    added: new Date().toLocaleDateString('pt-BR')
+  });
+  save(); renderJournals(); updateMetrics(); closeModal();
+}
+
+function removeJournal(id) {
+  journals = journals.filter(j => j.id !== id);
+  save(); renderJournals(); updateMetrics();
+}
+
+function renderJournals() {
+  const el = document.getElementById('journal-list');
+  if (!journals.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📚</div><p>Nenhuma revista cadastrada ainda.<br>Clique em "Adicionar revista" para começar.</p></div>`;
+    return;
+  }
+  el.innerHTML = journals.map(j => {
+    const initials = j.name.split(' ').filter(w => w.length > 2).slice(0,2).map(w => w[0]).join('').toUpperCase() || j.name.slice(0,2).toUpperCase();
+    return `<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="j-icon">${initials}</div>
+          <div>
+            <div class="card-title">${j.name}</div>
+            <div class="card-sub">${j.base || 'Editora não informada'}${j.issn ? ' · ISSN ' + j.issn : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="badge badge-gray">${FREQ_LABEL[j.freq]}</span>
+          ${j.cfp ? '<span class="badge badge-teal">CFP</span>' : ''}
+          <button class="btn-ghost" onclick="removeJournal(${j.id})" aria-label="Remover">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text3)">
+        <span>RSS configurado</span>
+        <span>Adicionada ${j.added}</span>
+        <a href="${j.rss}" target="_blank" style="color:var(--teal);text-decoration:none">Ver RSS ↗</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addKeyword() {
+  const input = document.getElementById('kw-input');
+  const terms = input.value.split(',').map(s => s.trim()).filter(Boolean);
+  terms.forEach(t => { if (!keywords.includes(t)) keywords.push(t); });
+  input.value = '';
+  save(); renderKeywords(); updateMetrics();
+}
+
+function removeKeyword(kw) {
+  keywords = keywords.filter(k => k !== kw);
+  save(); renderKeywords(); updateMetrics();
+}
+
+function renderKeywords() {
+  const el = document.getElementById('kw-container');
+  if (!keywords.length) {
+    el.innerHTML = '<div class="kw-list" style="margin-top:8px;color:var(--text3);font-size:13px">Nenhuma palavra-chave ainda.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="kw-list">${keywords.map(k =>
+    `<span class="kw-pill">${k}<button onclick="removeKeyword(${JSON.stringify(k)})">×</button></span>`
+  ).join('')}</div>`;
+}
+
+function updateMetrics() {
+  document.getElementById('m-journals').textContent = journals.length;
+  document.getElementById('m-keywords').textContent = keywords.length;
+  const email = (document.getElementById('email-dest') || {}).value || '';
+  const stored = localStorage.getItem('mp_email') || '';
+  document.getElementById('m-email').textContent = email || stored || '—';
+  const freq = (document.getElementById('global-freq') || {}).value || 'weekly';
+  document.getElementById('m-freq').textContent = FREQ_LABEL[freq] || 'Semanal';
+}
+
+function buildConfig() {
+  const freq = document.getElementById('global-freq').value;
+  const dest = document.getElementById('email-dest').value.trim();
+  const from = document.getElementById('email-from').value.trim();
+  if (dest) localStorage.setItem('mp_email', dest);
+  return {
+    email: {
+      destinatario: dest || 'seu@email.com',
+      remetente: from || 'sua-conta@gmail.com',
+      smtp_server: 'smtp.gmail.com',
+      smtp_port: 587
+    },
+    periodicidade: freq,
+    cron: FREQ_CRON[freq],
+    revistas: journals.map(j => ({ nome: j.name, rss: j.rss, base: j.base, issn: j.issn || '', monitorar_cfp: j.cfp })),
+    palavras_chave: keywords,
+    escopo_busca: {
+      titulos: document.getElementById('scope-title').checked,
+      resumos: document.getElementById('scope-abstract').checked,
+      palavras_chave_artigo: document.getElementById('scope-kw').checked
+    }
+  };
+}
+
+function refreshPreview() {
+  const el = document.getElementById('config-preview');
+  if (!journals.length) { el.textContent = 'Configure ao menos uma revista para visualizar...'; return; }
+  el.textContent = JSON.stringify(buildConfig(), null, 2);
+}
+
+function exportConfig() {
+  if (!journals.length) { alert('Adicione ao menos uma revista antes de exportar.'); return; }
+  const blob = new Blob([JSON.stringify(buildConfig(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'journals_config.json';
+  a.click();
+}
+
+document.getElementById('modal-wrap').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+renderJournals();
+renderKeywords();
+updateMetrics();
+</script>
+</body>
+</html>
