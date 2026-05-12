@@ -16,7 +16,10 @@
       "monitorar_cfp": true
     }
   ],
-  "palavras_chave": [],
+  "palavras_chave": [
+    "governance",
+    "governança"
+  ],
   "escopo_busca": {
     "titulos": true,
     "resumos": true,
