@@ -585,7 +585,7 @@ input:focus, select:focus, textarea:focus {
   <div id="page-cfp" class="page">
     <div class="page-header">
       <h2>Chamadas e special issues</h2>
-      <p>Itens dos RSS que parecem indicar chamadas de artigos, dossiês, números temáticos ou special issues</p>
+      <p>Correspondências encontradas nos RSS, classificadas por tipo de chamada</p>
     </div>
     <div class="card">
       <p class="sec-title">Fonte e filtros</p>
@@ -598,8 +598,8 @@ input:focus, select:focus, textarea:focus {
         </select>
         <input type="text" id="cfp-filter" placeholder="Filtrar por revista, termo ou chamada" oninput="renderCfpItems()" style="max-width:280px" />
       </div>
-      <p class="form-hint">Esta seção usa os feeds RSS cadastrados e procura termos como <em>call for papers</em>, <em>special issue</em>, dossiê, número temático, chamada de artigos e equivalentes em português, inglês e espanhol. Nem todas as revistas divulgam chamadas no RSS; quando isso não ocorrer, a detecção continuará funcionando pelo e-mail apenas se a chamada aparecer no feed.</p>
-      <div id="cfp-status" class="reader-status">Clique em “Atualizar chamadas” para consultar os feeds cadastrados.</div>
+      <p class="form-hint">Esta seção não tenta descobrir subpáginas externas de chamadas. Ela consulta apenas os RSS cadastrados e classifica as correspondências encontradas por categoria: chamadas de artigos, special issues, dossiês/números temáticos, prazos de submissão e editoria convidada. Quando uma revista não publica chamadas no RSS, nada será exibido nesta aba.</p>
+      <div id="cfp-status" class="reader-status">Clique em “Atualizar chamadas” para consultar os RSS e classificar possíveis chamadas.</div>
     </div>
     <div id="cfp-results"></div>
   </div>
@@ -1029,18 +1029,49 @@ function linkOf(item) {
   return '';
 }
 
-const CFP_TERMS = [
-  'call for papers', 'call for contributions', 'call for abstracts', 'special issue', 'special section',
-  'thematic issue', 'guest editor', 'guest editors', 'submission deadline', 'deadline for submissions',
-  'chamada de artigos', 'chamada para artigos', 'chamada para submissões', 'dossiê', 'dossie',
-  'número temático', 'numero tematico', 'número especial', 'numero especial', 'seção especial',
-  'convocatoria', 'convocatoria de artículos', 'convocatoria de articulos', 'llamada a artículos',
-  'llamada a articulos', 'número monográfico', 'numero monografico', 'dossier temático', 'dossier tematico'
+const CFP_CATEGORIES = [
+  {
+    key: 'call',
+    label: 'Chamadas de artigos / Call for papers',
+    terms: ['call for papers', 'call for contributions', 'call for abstracts', 'chamada de artigos', 'chamada para artigos', 'chamada para submissões', 'convocatoria de artículos', 'convocatoria de articulos', 'llamada a artículos', 'llamada a articulos']
+  },
+  {
+    key: 'special',
+    label: 'Special issue / Número especial',
+    terms: ['special issue', 'special section', 'número especial', 'numero especial', 'seção especial', 'seccion especial', 'número monográfico', 'numero monografico']
+  },
+  {
+    key: 'dossier',
+    label: 'Dossiê / Número temático',
+    terms: ['thematic issue', 'dossiê', 'dossie', 'dossier', 'dossier temático', 'dossier tematico', 'número temático', 'numero tematico']
+  },
+  {
+    key: 'deadline',
+    label: 'Prazo de submissão',
+    terms: ['submission deadline', 'deadline for submissions', 'deadline', 'prazo de submissão', 'prazo para submissão', 'fecha límite', 'fecha limite', 'plazo de envío', 'plazo de envio']
+  },
+  {
+    key: 'guest',
+    label: 'Editoria convidada / Guest editors',
+    terms: ['guest editor', 'guest editors', 'editor convidado', 'editores convidados', 'editor invitado', 'editores invitados']
+  },
+  {
+    key: 'announcement',
+    label: 'Avisos e notícias editoriais',
+    terms: ['announcement', 'announcements', 'notice', 'news', 'aviso', 'avisos', 'notícia', 'noticias', 'notícias', 'convocatoria']
+  }
 ];
 
-function isCfpText(title, summary) {
+function detectCfpCategories(title, summary) {
   const haystack = `${title || ''} ${summary || ''}`.toLowerCase();
-  return CFP_TERMS.some(term => haystack.includes(term));
+  return CFP_CATEGORIES.map(cat => {
+    const matched = cat.terms.filter(term => haystack.includes(term));
+    return matched.length ? { key: cat.key, label: cat.label, terms: matched } : null;
+  }).filter(Boolean);
+}
+
+function isCfpText(title, summary) {
+  return detectCfpCategories(title, summary).length > 0;
 }
 
 function parseFeed(text, journal) {
@@ -1055,6 +1086,7 @@ function parseFeed(text, journal) {
     const published = textOf(item, ['pubDate', 'published', 'updated', 'dc\\:date']);
     const haystack = `${title} ${cleanSummary}`.toLowerCase();
     const foundKeywords = keywords.filter(k => haystack.includes(k.toLowerCase()));
+    const cfpCategories = detectCfpCategories(title, cleanSummary);
     return {
       revista: journal.name,
       base: journal.base,
@@ -1063,7 +1095,8 @@ function parseFeed(text, journal) {
       published,
       summary: cleanSummary,
       keywords: foundKeywords,
-      isCfp: isCfpText(title, cleanSummary)
+      cfpCategories,
+      isCfp: cfpCategories.length > 0
     };
   });
 }
@@ -1124,7 +1157,7 @@ function renderReaderItems() {
       ${arr.map(item => `
         <div class="reader-item">
           <div class="reader-item-title"><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></div>
-          <div class="reader-item-meta">${escapeHtml(formatFeedDate(item.published))}${item.isCfp ? ' · <span class="badge badge-amber">Chamada/CFP</span>' : ''}${item.keywords.length ? ' · Palavras-chave: ' + item.keywords.map(k => `<span class="badge badge-teal">${escapeHtml(k)}</span>`).join(' ') : ''}</div>
+          <div class="reader-item-meta">${escapeHtml(formatFeedDate(item.published))}${item.isCfp ? ' · <span class="badge badge-amber">' + escapeHtml((item.cfpCategories[0] || {}).label || 'Chamada/CFP') + '</span>' : ''}${item.keywords.length ? ' · Palavras-chave: ' + item.keywords.map(k => `<span class="badge badge-teal">${escapeHtml(k)}</span>`).join(' ') : ''}</div>
           ${item.summary ? `<div class="reader-item-summary">${escapeHtml(item.summary)}${item.summary.length >= 450 ? '...' : ''}</div>` : ''}
         </div>
       `).join('')}
@@ -1171,33 +1204,58 @@ function renderCfpItems() {
   const results = document.getElementById('cfp-results');
   const items = window.cfpItems || [];
   const filter = (document.getElementById('cfp-filter')?.value || '').trim().toLowerCase();
-  const filtered = filter ? items.filter(i => `${i.revista} ${i.title} ${i.summary} ${i.keywords.join(' ')}`.toLowerCase().includes(filter)) : items;
+  const filtered = filter ? items.filter(i => `${i.revista} ${i.title} ${i.summary} ${i.keywords.join(' ')} ${(i.cfpCategories || []).map(c => c.label + ' ' + c.terms.join(' ')).join(' ')}`.toLowerCase().includes(filter)) : items;
   if (!filtered.length) {
-    results.innerHTML = `<div class="empty"><div class="empty-icon">CFP</div><p>Nenhuma chamada para exibir.<br>Algumas revistas divulgam chamadas fora do RSS, em páginas próprias de notícias, anúncios ou special issues.</p></div>`;
+    results.innerHTML = `<div class="empty"><div class="empty-icon">CFP</div><p>Nenhuma chamada para exibir.<br>Esta aba classifica apenas correspondências encontradas nos RSS cadastrados.</p></div>`;
     return;
   }
-  const grouped = filtered.reduce((acc, item) => {
-    (acc[item.revista] ||= []).push(item);
-    return acc;
-  }, {});
-  results.innerHTML = Object.entries(grouped).map(([revista, arr]) => `
-    <div class="card reader-journal">
-      <div class="card-header">
-        <div>
-          <h3>${escapeHtml(revista)}</h3>
-          <div class="card-sub">${arr.length} possível(is) chamada(s)</div>
+
+  const byCategory = {};
+  filtered.forEach(item => {
+    (item.cfpCategories || [{ key: 'other', label: 'Outras correspondências', terms: [] }]).forEach(cat => {
+      (byCategory[cat.label] ||= []).push({ ...item, matchedTerms: cat.terms });
+    });
+  });
+
+  const categoryOrder = CFP_CATEGORIES.map(c => c.label);
+  const orderedEntries = Object.entries(byCategory).sort(([a], [b]) => {
+    const ia = categoryOrder.indexOf(a);
+    const ib = categoryOrder.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  results.innerHTML = orderedEntries.map(([categoria, arr]) => {
+    const groupedByJournal = arr.reduce((acc, item) => {
+      (acc[item.revista] ||= []).push(item);
+      return acc;
+    }, {});
+    return `
+      <div class="card reader-journal">
+        <div class="card-header">
+          <div>
+            <h3>${escapeHtml(categoria)}</h3>
+            <div class="card-sub">${arr.length} correspondência(s), agrupadas por revista</div>
+          </div>
+          <span class="badge badge-amber">Chamadas</span>
         </div>
-        <span class="badge badge-amber">CFP</span>
-      </div>
-      ${arr.map(item => `
-        <div class="reader-item">
-          <div class="reader-item-title"><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></div>
-          <div class="reader-item-meta">${escapeHtml(formatFeedDate(item.published))}${item.keywords.length ? ' · Palavras-chave: ' + item.keywords.map(k => `<span class="badge badge-teal">${escapeHtml(k)}</span>`).join(' ') : ''}</div>
-          ${item.summary ? `<div class="reader-item-summary">${escapeHtml(item.summary)}${item.summary.length >= 450 ? '...' : ''}</div>` : ''}
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+        ${Object.entries(groupedByJournal).map(([revista, itens]) => `
+          <div style="margin-top:14px">
+            <div class="sec-title" style="margin-bottom:6px;color:var(--text2)">${escapeHtml(revista)}</div>
+            ${itens.map(item => `
+              <div class="reader-item">
+                <div class="reader-item-title"><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></div>
+                <div class="reader-item-meta">
+                  ${escapeHtml(formatFeedDate(item.published))}
+                  ${item.matchedTerms && item.matchedTerms.length ? ' · Termos: ' + item.matchedTerms.map(t => `<span class="badge badge-gray">${escapeHtml(t)}</span>`).join(' ') : ''}
+                  ${item.keywords.length ? ' · Palavras-chave: ' + item.keywords.map(k => `<span class="badge badge-teal">${escapeHtml(k)}</span>`).join(' ') : ''}
+                </div>
+                ${item.summary ? `<div class="reader-item-summary">${escapeHtml(item.summary)}${item.summary.length >= 450 ? '...' : ''}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>`;
+  }).join('');
 }
 
 document.getElementById('modal-wrap').addEventListener('click', function(e) {
