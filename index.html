@@ -349,6 +349,80 @@ input:focus, select:focus, textarea:focus {
 .reader-item-summary { font-size:13px; color:var(--text2); line-height:1.55; }
 .reader-status { font-size:12px; color:var(--text2); margin-top:8px; line-height:1.6; }
 
+/* ── Share page ── */
+.share-hero {
+  background: linear-gradient(135deg, #1A1714 0%, #2d4a3e 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2rem 1.75rem;
+  margin-bottom: 1.25rem;
+  color: #F7F5F0;
+}
+.share-hero h3 { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; margin-bottom: 6px; }
+.share-hero p { font-size: 13px; color: rgba(247,245,240,0.65); line-height: 1.65; max-width: 520px; }
+.share-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.25rem; }
+
+.btn-github {
+  background: #F7F5F0; color: #1A1714;
+  border: none; border-radius: var(--radius);
+  padding: 10px 20px; font-size: 13px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.15s; font-family: 'Outfit', sans-serif;
+  text-decoration: none;
+}
+.btn-github:hover { background: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+.btn-copy-link {
+  background: rgba(255,255,255,0.12); color: #F7F5F0;
+  border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius);
+  padding: 10px 20px; font-size: 13px; font-weight: 500;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.15s; font-family: 'Outfit', sans-serif;
+}
+.btn-copy-link:hover { background: rgba(255,255,255,0.2); }
+
+.onboarding-steps { counter-reset: steps; display: flex; flex-direction: column; gap: 0; }
+.onboard-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 16px 0; border-bottom: 1px solid var(--border);
+  counter-increment: steps;
+}
+.onboard-step:last-child { border-bottom: none; }
+.onboard-num {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--surface2); color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; margin-top: 1px;
+  font-family: 'DM Mono', monospace;
+}
+.onboard-step.done .onboard-num { background: var(--teal-light); color: var(--teal); }
+.onboard-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.onboard-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.onboard-desc code { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
+.onboard-desc a { color: var(--teal); text-decoration: none; }
+.onboard-desc a:hover { text-decoration: underline; }
+
+.share-link-box {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text2);
+  word-break: break-all;
+  margin-top: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.share-link-box span { flex: 1; }
+.copy-btn { background: none; border: 1px solid var(--border2); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; color: var(--text2); font-family: 'Outfit', sans-serif; white-space: nowrap; }
+.copy-btn:hover { background: var(--surface); color: var(--text); }
+
+.fork-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--amber-light); color: var(--amber);
+  border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 500;
+}
+
 /* ── Responsive ── */
 @media (max-width: 720px) {
   .shell { grid-template-columns: 1fr; }
@@ -393,6 +467,10 @@ input:focus, select:focus, textarea:focus {
     <button class="nav-item" onclick="goTo('cfp')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
       Chamadas
+    </button>
+    <button class="nav-item" onclick="goTo('share')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Compartilhar
     </button>
   </nav>
   <div class="sidebar-footer">
@@ -604,6 +682,92 @@ input:focus, select:focus, textarea:focus {
     <div id="cfp-results"></div>
   </div>
 
+  <!-- PAGE: Compartilhar -->
+  <div id="page-share" class="page">
+    <div class="page-header">
+      <h2>Compartilhar com colegas</h2>
+      <p>Cada colega terá a própria instância do monitor, com suas revistas e palavras-chave</p>
+    </div>
+
+    <div class="share-hero">
+      <h3>Como funciona o compartilhamento</h3>
+      <p>O modelo ideal é cada pessoa fazer um <em>fork</em> do seu repositório no GitHub. Em poucos minutos, o colega terá o mesmo painel e script rodando — com liberdade de personalizar revistas e palavras-chave sem afetar a sua configuração.</p>
+      <div class="share-hero-actions">
+        <a id="fork-link" href="#" target="_blank" class="btn-github" onclick="openForkPage(event)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><line x1="12" y1="12" x2="12" y2="15"/></svg>
+          Abrir página de fork no GitHub
+        </a>
+        <button class="btn-copy-link" onclick="copyShareLink()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="copy-link-label">Copiar link do painel</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="sec-title">Seu repositório</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Detectado a partir das Configuracoes. O repositorio precisa ser <strong>publico</strong> para fork e GitHub Pages.</p>
+      <div class="share-link-box">
+        <span id="repo-display">Configure o repositorio em Configuracoes para ver o link aqui.</span>
+        <button class="copy-btn" onclick="copyRepoLink()">Copiar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="sec-title">Passo a passo para o colega</p>
+      <div class="onboarding-steps">
+        <div class="onboard-step">
+          <div class="onboard-num">1</div>
+          <div>
+            <div class="onboard-title">Fazer fork do repositorio</div>
+            <div class="onboard-desc">Abrir o link acima e clicar em <strong>Fork</strong> no canto superior direito. O GitHub cria uma copia completa na conta do colega.</div>
+          </div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-num">2</div>
+          <div>
+            <div class="onboard-title">Ativar o GitHub Pages</div>
+            <div class="onboard-desc">No fork: <strong>Settings &rarr; Pages &rarr; Source: Deploy from branch &rarr; main &rarr; / (root) &rarr; Save</strong>. Em 1-2 minutos o painel estara em <code>usuario.github.io/nome-do-repo</code>.</div>
+          </div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-num">3</div>
+          <div>
+            <div class="onboard-title">Adicionar o secret <code>EMAIL_SENHA</code></div>
+            <div class="onboard-desc">Gerar uma <a href="https://myaccount.google.com/apppasswords" target="_blank">senha de app do Gmail</a> e salvar em <strong>Settings &rarr; Secrets and variables &rarr; Actions &rarr; New repository secret</strong> com o nome <code>EMAIL_SENHA</code>.</div>
+          </div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-num">4</div>
+          <div>
+            <div class="onboard-title">Configurar o painel</div>
+            <div class="onboard-desc">Abrir a URL do GitHub Pages do fork &rarr; <strong>Configuracoes</strong> &rarr; preencher e-mail, owner/repo do proprio fork e um token pessoal &rarr; cadastrar revistas e palavras-chave &rarr; <strong>Salvar configuracao no GitHub</strong>.</div>
+          </div>
+        </div>
+        <div class="onboard-step done">
+          <div class="onboard-num">&#10003;</div>
+          <div>
+            <div class="onboard-title">Monitor rodando de forma independente</div>
+            <div class="onboard-desc">O script roda automaticamente no GitHub Actions do fork, com as configuracoes proprias do colega. Suas alteracoes nao afetam a instancia dele.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <p class="sec-title" style="margin-bottom:0">Mensagem pronta para copiar e enviar</p>
+        <button class="copy-btn" onclick="copyInviteMessage()">Copiar mensagem</button>
+      </div>
+      <div id="invite-message" style="font-size:12px;color:var(--text2);line-height:1.75;background:var(--surface2);border-radius:var(--radius);padding:14px 16px;white-space:pre-wrap;font-family:'DM Mono',monospace;"></div>
+    </div>
+
+    <div class="card">
+      <p class="sec-title">Atencao: visibilidade do repositorio</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7">Para fork e GitHub Pages funcionarem sem autenticacao, o repositorio precisa ser <strong>publico</strong>. Va em <strong>Settings &rarr; Danger Zone &rarr; Change visibility &rarr; Public</strong>.<br><br>O <code>journals_config.json</code> ficara visivel — mas a senha fica no secret, fora do JSON.</p>
+    </div>
+  </div>
+
 </main>
 </div>
 
@@ -677,12 +841,13 @@ function save() {
 function goTo(name) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  const names = ['journals','keywords','config','reader','cfp'];
+  const names = ['journals','keywords','config','reader','cfp','share'];
   document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
   document.getElementById('page-' + name).classList.add('active');
   if (name === 'config') refreshPreview();
   if (name === 'reader' && !window.readerItems) loadRssReader();
   if (name === 'cfp' && !window.cfpItems) loadCfpReader();
+  if (name === 'share') refreshSharePage();
 }
 
 function openModal() {
@@ -1256,6 +1421,103 @@ function renderCfpItems() {
         `).join('')}
       </div>`;
   }).join('');
+}
+
+
+// ── Share page ─────────────────────────────────────────────────────────────
+
+function getRepoUrl() {
+  const owner = (document.getElementById('github-owner') || {}).value || '';
+  const repo = (document.getElementById('github-repo') || {}).value || '';
+  if (!owner || !repo) return null;
+  return `https://github.com/${owner}/${repo}`;
+}
+
+function getPagesUrl() {
+  const owner = (document.getElementById('github-owner') || {}).value || '';
+  const repo = (document.getElementById('github-repo') || {}).value || '';
+  if (!owner || !repo) return null;
+  return `https://${owner}.github.io/${repo}`;
+}
+
+function refreshSharePage() {
+  const repoUrl = getRepoUrl();
+  const pagesUrl = getPagesUrl();
+
+  // repo display
+  const repoDisplay = document.getElementById('repo-display');
+  if (repoDisplay) {
+    repoDisplay.textContent = repoUrl || 'Configure o repositorio em Configuracoes para ver o link aqui.';
+  }
+
+  // fork link
+  const forkLink = document.getElementById('fork-link');
+  if (forkLink && repoUrl) {
+    forkLink.href = repoUrl;
+  }
+
+  // invite message
+  const msg = document.getElementById('invite-message');
+  if (msg) {
+    if (!repoUrl) {
+      msg.textContent = 'Configure o repositorio em Configuracoes para gerar a mensagem.';
+    } else {
+      msg.textContent = `Ola!
+
+Quero compartilhar uma ferramenta que uso para monitorar periodicos cientificos automaticamente. Ela verifica RSS feeds das revistas cadastradas, busca palavras-chave em titulos e resumos, e envia alertas por e-mail — tudo via GitHub Actions, sem custo.
+
+Para usar, basta:
+
+1. Fazer fork do repositorio: ${repoUrl}
+2. Ativar o GitHub Pages (Settings > Pages > main / root)
+3. Adicionar uma senha de app do Gmail como secret (EMAIL_SENHA)
+4. Abrir o painel pelo GitHub Pages, configurar suas revistas e clicar em "Salvar configuracao no GitHub"
+
+O painel esta em: ${pagesUrl || '[sua URL do GitHub Pages]'}
+
+Qualquer duvida e so falar!`;
+    }
+  }
+}
+
+function openForkPage(e) {
+  const repoUrl = getRepoUrl();
+  if (!repoUrl) {
+    e.preventDefault();
+    alert('Configure o owner e o repositorio em Configuracoes antes de abrir o fork.');
+    return;
+  }
+  e.currentTarget.href = repoUrl;
+}
+
+function copyRepoLink() {
+  const repoUrl = getRepoUrl();
+  if (!repoUrl) { alert('Configure o repositorio em Configuracoes.'); return; }
+  navigator.clipboard.writeText(repoUrl).then(() => {
+    const el = document.querySelector('.share-link-box .copy-btn');
+    if (el) { el.textContent = 'Copiado!'; setTimeout(() => el.textContent = 'Copiar', 1500); }
+  });
+}
+
+function copyShareLink() {
+  const pagesUrl = getPagesUrl();
+  if (!pagesUrl) { alert('Configure o repositorio em Configuracoes.'); return; }
+  navigator.clipboard.writeText(pagesUrl).then(() => {
+    const el = document.getElementById('copy-link-label');
+    if (el) { el.textContent = 'Copiado!'; setTimeout(() => el.textContent = 'Copiar link do painel', 1500); }
+  });
+}
+
+function copyInviteMessage() {
+  const msg = document.getElementById('invite-message');
+  if (!msg || !msg.textContent || msg.textContent.includes('Configure')) {
+    alert('Configure o repositorio em Configuracoes para gerar a mensagem.');
+    return;
+  }
+  navigator.clipboard.writeText(msg.textContent).then(() => {
+    const btn = document.querySelector('[onclick="copyInviteMessage()"]');
+    if (btn) { btn.textContent = 'Copiado!'; setTimeout(() => btn.textContent = 'Copiar mensagem', 1500); }
+  });
 }
 
 document.getElementById('modal-wrap').addEventListener('click', function(e) {
