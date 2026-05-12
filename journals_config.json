@@ -5,8 +5,8 @@
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587
   },
-  "periodicidade": "weekly",
-  "cron": "0 11 * * 1",
+  "periodicidade": "daily",
+  "cron": "0 11 * * *",
   "revistas": [
     {
       "nome": "Governance",
