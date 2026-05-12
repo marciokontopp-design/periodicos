@@ -118,6 +118,71 @@ def formatar_data(valor):
         return limpar_html(valor)
 
 
+# ── Classificação de chamadas ─────────────────────────────────────────────────
+
+CFP_CATEGORIAS = [
+    (
+        "Chamadas de artigos / Call for papers",
+        [
+            "call for papers", "call for contributions", "call for articles",
+            "call for abstracts", "chamada de artigos", "chamada para artigos",
+            "convocatoria", "llamada a artículos", "llamado a artículos",
+            "recebe artigos", "submissions invited"
+        ],
+    ),
+    (
+        "Special issue / Número especial",
+        [
+            "special issue", "special section", "número especial",
+            "numero especial", "edición especial", "edicion especial"
+        ],
+    ),
+    (
+        "Dossiê / Número temático",
+        [
+            "dossiê", "dossie", "dossier", "dossier temático",
+            "dossier tematico", "número temático", "numero temático",
+            "numero tematico", "thematic issue", "thematic section"
+        ],
+    ),
+    (
+        "Prazo de submissão",
+        [
+            "submission deadline", "deadline", "prazo de submissão",
+            "prazo para submissão", "fecha límite", "fecha limite",
+            "hasta el", "submissões até", "submissoes ate"
+        ],
+    ),
+    (
+        "Editoria convidada / Guest editors",
+        [
+            "guest editor", "guest editors", "editores convidados",
+            "editor convidado", "editores invitados", "editor invitado"
+        ],
+    ),
+    (
+        "Avisos e notícias editoriais",
+        [
+            "announcement", "announcements", "avisos", "notícias",
+            "noticias", "news", "editorial notice", "comunicado"
+        ],
+    ),
+]
+
+
+def classificar_chamada(titulo, resumo):
+    """Classifica possíveis chamadas editoriais a partir de título/resumo do RSS."""
+    texto = f"{titulo} {resumo}".lower()
+    categorias = []
+    termos_encontrados = []
+    for categoria, termos in CFP_CATEGORIAS:
+        encontrados_categoria = [t for t in termos if t.lower() in texto]
+        if encontrados_categoria:
+            categorias.append(categoria)
+            termos_encontrados.extend(encontrados_categoria)
+    return categorias, sorted(set(termos_encontrados))
+
+
 # ── Leitura de RSS ─────────────────────────────────────────────────────────────
 
 def buscar_novidades(revista, estado, palavras_chave, escopo):
@@ -139,15 +204,8 @@ def buscar_novidades(revista, estado, palavras_chave, escopo):
         link = entry.get("link", "#")
         publicado = formatar_data(entry.get("published", "") or entry.get("updated", ""))
 
-        texto_para_classificar = f"{titulo} {resumo_completo}".lower()
-
-        # Detecta call for papers / special issue no título ou resumo.
-        cfp_terms = [
-            "call for papers", "special issue", "chamada de artigos",
-            "guest editor", "thematic issue", "dossiê", "dossier",
-            "convocatoria", "call for abstracts"
-        ]
-        is_cfp = any(t in texto_para_classificar for t in cfp_terms)
+        categorias_cfp, termos_cfp = classificar_chamada(titulo, resumo_completo)
+        is_cfp = bool(categorias_cfp)
 
         if is_cfp and revista.get("monitorar_cfp", False):
             cfp_encontrados.append({
@@ -157,6 +215,8 @@ def buscar_novidades(revista, estado, palavras_chave, escopo):
                 "publicado": publicado,
                 "id": eid,
                 "resumo": resumo_curto,
+                "categorias": categorias_cfp,
+                "termos": termos_cfp,
             })
         else:
             novos_artigos.append({
@@ -199,6 +259,28 @@ def agrupar_por_revista(itens):
         revista = item.get("revista", "Revista não identificada")
         grupos.setdefault(revista, []).append(item)
     return grupos
+
+
+def agrupar_chamadas_por_categoria(chamadas):
+    """Agrupa chamadas primeiro por categoria e depois por revista."""
+    grupos = {}
+    for item in chamadas:
+        categorias = item.get("categorias") or ["Chamadas não classificadas"]
+        for categoria in categorias:
+            grupos.setdefault(categoria, {})
+            revista = item.get("revista", "Revista não identificada")
+            grupos[categoria].setdefault(revista, []).append(item)
+    return grupos
+
+
+def badge_termos(termos):
+    if not termos:
+        return ""
+    return " ".join(
+        f"<span style='display:inline-block;background:#FBF3E3;color:#854F0B;"
+        f"border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;'>{html_lib.escape(str(t))}</span>"
+        for t in termos
+    )
 
 
 def badge_keywords(keywords):
@@ -284,15 +366,21 @@ def construir_html(novos_artigos, matches_keywords, cfp_encontrados):
 
     if cfp_encontrados:
         html += """
-        <h3 style="font-size:17px;color:#854F0B;margin:22px 0 12px 0;">📢 Chamadas de artigos e special issues</h3>
+        <h3 style="font-size:17px;color:#854F0B;margin:22px 0 12px 0;">📢 Chamadas, dossiês e special issues</h3>
+        <p style="font-size:13px;color:#6B6560;margin:0 0 12px 0;">Itens classificados automaticamente a partir de termos encontrados no título e/ou resumo do RSS.</p>
         """
-        for revista, chamadas in agrupar_por_revista(cfp_encontrados).items():
+        for categoria, revistas in agrupar_chamadas_por_categoria(cfp_encontrados).items():
             html += f"""
-            <div style="border:1px solid #F1D8A8;background:#FFFDF7;border-radius:12px;padding:14px 16px;margin:0 0 14px 0;">
-              <h4 style="font-size:16px;color:#1A1714;margin:0 0 10px 0;">{html_lib.escape(revista)}</h4>
+            <div style="border:1px solid #F1D8A8;background:#FFFDF7;border-radius:12px;padding:14px 16px;margin:0 0 16px 0;">
+              <h4 style="font-size:16px;color:#854F0B;margin:0 0 12px 0;">{html_lib.escape(categoria)}</h4>
             """
-            for c in chamadas:
-                html += bloco_item(c, "#854F0B")
+            for revista, chamadas in revistas.items():
+                html += f"<h5 style='font-size:14px;color:#1A1714;margin:12px 0 6px 0;'>{html_lib.escape(revista)}</h5>"
+                for c in chamadas:
+                    html += bloco_item(c, "#854F0B")
+                    termos_html = badge_termos(c.get("termos", []))
+                    if termos_html:
+                        html += f"<div style='font-size:12px;color:#333;margin:-6px 0 8px 0;'>Termos de classificação: {termos_html}</div>"
             html += "</div>"
 
     if not any([novos_artigos, matches_keywords, cfp_encontrados]):
