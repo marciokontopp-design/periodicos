@@ -333,6 +333,22 @@ input:focus, select:focus, textarea:focus {
 /* ── Section title ── */
 .sec-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 12px; }
 
+
+
+/* ── RSS Reader ── */
+.reader-toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+.reader-toolbar select { max-width:190px; }
+.reader-journal { margin-bottom:1rem; }
+.reader-journal h3 { font-family:'DM Serif Display', serif; font-size:20px; font-weight:400; margin-bottom:8px; }
+.reader-item { padding:12px 0; border-top:1px solid var(--border); }
+.reader-item:first-of-type { border-top:none; }
+.reader-item-title { font-size:14px; font-weight:500; line-height:1.4; }
+.reader-item-title a { color:var(--text); text-decoration:none; }
+.reader-item-title a:hover { color:var(--teal); text-decoration:underline; }
+.reader-item-meta { font-size:12px; color:var(--text3); margin:3px 0 5px; }
+.reader-item-summary { font-size:13px; color:var(--text2); line-height:1.55; }
+.reader-status { font-size:12px; color:var(--text2); margin-top:8px; line-height:1.6; }
+
 /* ── Responsive ── */
 @media (max-width: 720px) {
   .shell { grid-template-columns: 1fr; }
@@ -370,13 +386,17 @@ input:focus, select:focus, textarea:focus {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Configurações
     </button>
+    <button class="nav-item" onclick="goTo('reader')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+      Leitor RSS
+    </button>
     <button class="nav-item" onclick="goTo('export')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Exportar config
     </button>
   </nav>
   <div class="sidebar-footer">
-    <p>Configure as revistas e palavras-chave aqui, exporte o <code>journals_config.json</code> e suba para o GitHub.</p>
+    <p>Configure as revistas e palavras-chave, salve o <code>journals_config.json</code> no GitHub e acompanhe os feeds no leitor RSS.</p>
   </div>
 </aside>
 
@@ -483,6 +503,31 @@ input:focus, select:focus, textarea:focus {
         <label class="toggle"><input type="checkbox" id="alert-cfp" checked /><span class="tog-track"></span></label>
       </div>
     </div>
+  </div>
+
+
+  <!-- PAGE: Leitor RSS -->
+  <div id="page-reader" class="page">
+    <div class="page-header">
+      <h2>Leitor RSS</h2>
+      <p>Visualização rápida dos artigos mais recentes nos feeds cadastrados</p>
+    </div>
+    <div class="card">
+      <p class="sec-title">Fonte e filtros</p>
+      <div class="reader-toolbar">
+        <button class="btn btn-outline" onclick="loadConfigFromPublishedFile(true)">Carregar configuração publicada</button>
+        <button class="btn btn-dark" onclick="loadRssReader()">Atualizar leitor</button>
+        <select id="reader-limit">
+          <option value="5">5 itens por revista</option>
+          <option value="10" selected>10 itens por revista</option>
+          <option value="20">20 itens por revista</option>
+        </select>
+        <input type="text" id="reader-filter" placeholder="Filtrar por termo ou palavra-chave" oninput="renderReaderItems()" style="max-width:260px" />
+      </div>
+      <p class="form-hint">O leitor usa os feeds RSS cadastrados no painel. Se você abriu a página em um navegador novo, clique primeiro em “Carregar configuração publicada”. Alguns publishers podem bloquear leitura direta no navegador; nesses casos o monitor por e-mail continua funcionando normalmente via GitHub Actions.</p>
+      <div id="reader-status" class="reader-status">Nenhum feed carregado ainda.</div>
+    </div>
+    <div id="reader-results"></div>
   </div>
 
   <!-- PAGE: Exportar -->
@@ -645,10 +690,11 @@ function save() {
 function goTo(name) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  const names = ['journals','keywords','config','export'];
+  const names = ['journals','keywords','config','reader','export'];
   document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
   document.getElementById('page-' + name).classList.add('active');
   if (name === 'export') refreshPreview();
+  if (name === 'reader' && !window.readerItems) loadRssReader();
 }
 
 function openModal() {
@@ -905,6 +951,171 @@ async function saveConfigToGitHub(runAfterSave = false) {
     status.textContent = 'Erro: ' + err.message;
     console.error(err);
   }
+}
+
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function stripHtml(str) {
+  const div = document.createElement('div');
+  div.innerHTML = str || '';
+  return (div.textContent || div.innerText || '').trim();
+}
+
+function formatFeedDate(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function mapConfigToLocal(config) {
+  if (!config || !Array.isArray(config.revistas)) throw new Error('journals_config.json não contém a lista de revistas esperada.');
+  journals = config.revistas.map((j, idx) => ({
+    id: Date.now() + idx,
+    name: j.nome || j.name || 'Revista sem nome',
+    rss: j.rss || '',
+    base: j.base || '',
+    issn: j.issn || '',
+    freq: config.periodicidade || 'weekly',
+    cfp: j.monitorar_cfp !== false,
+    added: new Date().toLocaleDateString('pt-BR')
+  })).filter(j => j.rss);
+  keywords = Array.isArray(config.palavras_chave) ? config.palavras_chave : [];
+  if (config.email) {
+    const destEl = document.getElementById('email-dest');
+    const fromEl = document.getElementById('email-from');
+    if (destEl && config.email.destinatario) destEl.value = config.email.destinatario;
+    if (fromEl && config.email.remetente) fromEl.value = config.email.remetente;
+  }
+  if (config.periodicidade && document.getElementById('global-freq')) document.getElementById('global-freq').value = config.periodicidade;
+  save(); saveUiState(); renderJournals(); renderKeywords(); updateMetrics(); refreshPreview();
+}
+
+async function loadConfigFromPublishedFile(showStatus = false) {
+  const status = document.getElementById('reader-status');
+  try {
+    if (status && showStatus) status.textContent = 'Carregando journals_config.json publicado...';
+    const response = await fetch(`journals_config.json?t=${Date.now()}`);
+    if (!response.ok) throw new Error(`Não foi possível carregar journals_config.json (${response.status}).`);
+    const config = await response.json();
+    mapConfigToLocal(config);
+    if (status && showStatus) status.textContent = `Configuração publicada carregada: ${journals.length} revista(s) e ${keywords.length} palavra(s)-chave.`;
+    return true;
+  } catch (err) {
+    if (status && showStatus) status.textContent = 'Erro ao carregar configuração publicada: ' + err.message;
+    return false;
+  }
+}
+
+function rssProxyUrl(url) {
+  return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+}
+
+function textOf(parent, selectors) {
+  for (const selector of selectors) {
+    const el = parent.querySelector(selector);
+    if (el) return (el.textContent || '').trim();
+  }
+  return '';
+}
+
+function linkOf(item) {
+  const rssLink = item.querySelector('link');
+  if (rssLink) {
+    const href = rssLink.getAttribute('href');
+    return href || (rssLink.textContent || '').trim();
+  }
+  return '';
+}
+
+function parseFeed(text, journal) {
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const parseError = doc.querySelector('parsererror');
+  if (parseError) throw new Error('RSS inválido ou não interpretável pelo navegador.');
+  const nodes = Array.from(doc.querySelectorAll('item, entry'));
+  return nodes.map(item => {
+    const title = textOf(item, ['title']) || 'Sem título';
+    const summaryRaw = textOf(item, ['description', 'summary', 'content']);
+    const cleanSummary = stripHtml(summaryRaw).slice(0, 450);
+    const published = textOf(item, ['pubDate', 'published', 'updated', 'dc\\:date']);
+    const haystack = `${title} ${cleanSummary}`.toLowerCase();
+    const foundKeywords = keywords.filter(k => haystack.includes(k.toLowerCase()));
+    return {
+      revista: journal.name,
+      base: journal.base,
+      title,
+      link: linkOf(item),
+      published,
+      summary: cleanSummary,
+      keywords: foundKeywords
+    };
+  });
+}
+
+async function loadRssReader() {
+  const status = document.getElementById('reader-status');
+  const results = document.getElementById('reader-results');
+  if (!journals.length) await loadConfigFromPublishedFile(false);
+  if (!journals.length) {
+    status.textContent = 'Nenhuma revista cadastrada. Cadastre uma revista ou carregue a configuração publicada.';
+    results.innerHTML = '';
+    return;
+  }
+  status.textContent = `Carregando ${journals.length} feed(s) RSS...`;
+  results.innerHTML = '';
+  const all = [];
+  const errors = [];
+  const limit = Number(document.getElementById('reader-limit').value || 10);
+  for (const journal of journals) {
+    try {
+      const response = await fetch(rssProxyUrl(journal.rss));
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      const parsed = parseFeed(text, journal).slice(0, limit);
+      all.push(...parsed);
+    } catch (err) {
+      errors.push(`${journal.name}: ${err.message}`);
+    }
+  }
+  window.readerItems = all;
+  renderReaderItems();
+  const baseMsg = `${all.length} item(ns) carregado(s) em ${journals.length} revista(s).`;
+  status.textContent = errors.length ? `${baseMsg} Alguns feeds não puderam ser lidos no navegador: ${errors.join(' | ')}` : baseMsg;
+}
+
+function renderReaderItems() {
+  const results = document.getElementById('reader-results');
+  const items = window.readerItems || [];
+  const filter = (document.getElementById('reader-filter')?.value || '').trim().toLowerCase();
+  const filtered = filter ? items.filter(i => `${i.revista} ${i.title} ${i.summary} ${i.keywords.join(' ')}`.toLowerCase().includes(filter)) : items;
+  if (!filtered.length) {
+    results.innerHTML = `<div class="empty"><div class="empty-icon">RSS</div><p>Nenhum item para exibir.<br>Atualize o leitor ou ajuste o filtro.</p></div>`;
+    return;
+  }
+  const grouped = filtered.reduce((acc, item) => {
+    (acc[item.revista] ||= []).push(item);
+    return acc;
+  }, {});
+  results.innerHTML = Object.entries(grouped).map(([revista, arr]) => `
+    <div class="card reader-journal">
+      <div class="card-header">
+        <div>
+          <h3>${escapeHtml(revista)}</h3>
+          <div class="card-sub">${arr.length} item(ns) carregado(s)</div>
+        </div>
+      </div>
+      ${arr.map(item => `
+        <div class="reader-item">
+          <div class="reader-item-title"><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></div>
+          <div class="reader-item-meta">${escapeHtml(formatFeedDate(item.published))}${item.keywords.length ? ' · Palavras-chave: ' + item.keywords.map(k => `<span class="badge badge-teal">${escapeHtml(k)}</span>`).join(' ') : ''}</div>
+          ${item.summary ? `<div class="reader-item-summary">${escapeHtml(item.summary)}${item.summary.length >= 450 ? '...' : ''}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
 }
 
 document.getElementById('modal-wrap').addEventListener('click', function(e) {
