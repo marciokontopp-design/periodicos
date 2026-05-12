@@ -515,7 +515,6 @@ input:focus, select:focus, textarea:focus {
     <div class="card">
       <p class="sec-title">Fonte e filtros</p>
       <div class="reader-toolbar">
-        <button class="btn btn-outline" onclick="loadConfigFromPublishedFile(true)">Carregar configuração publicada</button>
         <button class="btn btn-dark" onclick="loadRssReader()">Atualizar leitor</button>
         <select id="reader-limit">
           <option value="5">5 itens por revista</option>
@@ -524,8 +523,8 @@ input:focus, select:focus, textarea:focus {
         </select>
         <input type="text" id="reader-filter" placeholder="Filtrar por termo ou palavra-chave" oninput="renderReaderItems()" style="max-width:260px" />
       </div>
-      <p class="form-hint">O leitor usa os feeds RSS cadastrados no painel. Se você abriu a página em um navegador novo, clique primeiro em “Carregar configuração publicada”. Alguns publishers podem bloquear leitura direta no navegador; nesses casos o monitor por e-mail continua funcionando normalmente via GitHub Actions.</p>
-      <div id="reader-status" class="reader-status">Nenhum feed carregado ainda.</div>
+      <p class="form-hint">O leitor usa sempre o <code>journals_config.json</code> publicado no GitHub Pages. Ao clicar em “Atualizar leitor”, a configuração mais recente é carregada automaticamente e os feeds RSS são consultados. Alguns publishers podem bloquear leitura direta no navegador; nesses casos o monitor por e-mail continua funcionando normalmente via GitHub Actions.</p>
+      <div id="reader-status" class="reader-status">Clique em “Atualizar leitor” para carregar a configuração publicada e consultar os feeds.</div>
     </div>
     <div id="reader-results"></div>
   </div>
@@ -1016,8 +1015,18 @@ function rssProxyUrl(url) {
 
 function textOf(parent, selectors) {
   for (const selector of selectors) {
-    const el = parent.querySelector(selector);
-    if (el) return (el.textContent || '').trim();
+    let el = null;
+    try { el = parent.querySelector(selector); } catch (e) { el = null; }
+    if (el && (el.textContent || '').trim()) return (el.textContent || '').trim();
+
+    // Fallback para elementos com namespace, como <content:encoded> ou <dc:description>.
+    const wanted = selector.replace(/\\:/g, ':').toLowerCase();
+    el = Array.from(parent.children || []).find(child => {
+      const tag = (child.tagName || '').toLowerCase();
+      const local = (child.localName || '').toLowerCase();
+      return tag === wanted || local === wanted || tag.endsWith(':' + wanted) || wanted.endsWith(':' + local);
+    });
+    if (el && (el.textContent || '').trim()) return (el.textContent || '').trim();
   }
   return '';
 }
@@ -1038,7 +1047,7 @@ function parseFeed(text, journal) {
   const nodes = Array.from(doc.querySelectorAll('item, entry'));
   return nodes.map(item => {
     const title = textOf(item, ['title']) || 'Sem título';
-    const summaryRaw = textOf(item, ['description', 'summary', 'content']);
+    const summaryRaw = textOf(item, ['description', 'summary', 'content\\:encoded', 'content', 'dc\\:description', 'prism\\:teaser', 'subtitle']);
     const cleanSummary = stripHtml(summaryRaw).slice(0, 450);
     const published = textOf(item, ['pubDate', 'published', 'updated', 'dc\\:date']);
     const haystack = `${title} ${cleanSummary}`.toLowerCase();
@@ -1058,13 +1067,14 @@ function parseFeed(text, journal) {
 async function loadRssReader() {
   const status = document.getElementById('reader-status');
   const results = document.getElementById('reader-results');
-  if (!journals.length) await loadConfigFromPublishedFile(false);
-  if (!journals.length) {
-    status.textContent = 'Nenhuma revista cadastrada. Cadastre uma revista ou carregue a configuração publicada.';
+  status.textContent = 'Carregando configuração publicada...';
+  const loaded = await loadConfigFromPublishedFile(false);
+  if (!loaded || !journals.length) {
+    status.textContent = 'Nenhuma revista encontrada no journals_config.json publicado. Salve a configuração no GitHub antes de atualizar o leitor.';
     results.innerHTML = '';
     return;
   }
-  status.textContent = `Carregando ${journals.length} feed(s) RSS...`;
+  status.textContent = `Configuração carregada. Consultando ${journals.length} feed(s) RSS...`;
   results.innerHTML = '';
   const all = [];
   const errors = [];
@@ -1082,7 +1092,7 @@ async function loadRssReader() {
   }
   window.readerItems = all;
   renderReaderItems();
-  const baseMsg = `${all.length} item(ns) carregado(s) em ${journals.length} revista(s).`;
+  const baseMsg = `${all.length} item(ns) carregado(s) em ${journals.length} revista(s), a partir do journals_config.json publicado.`;
   status.textContent = errors.length ? `${baseMsg} Alguns feeds não puderam ser lidos no navegador: ${errors.join(' | ')}` : baseMsg;
 }
 
