@@ -9,6 +9,7 @@ import os
 import hashlib
 import smtplib
 import feedparser
+from html import escape
 from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -100,64 +101,137 @@ def buscar_novidades(revista, estado, palavras_chave, escopo):
 
 # ── Geração do e-mail ──────────────────────────────────────────────────────────
 
+def agrupar_por_revista(itens):
+    """Agrupa uma lista de itens pelo nome da revista."""
+    grupos = {}
+    for item in itens:
+        revista = item.get("revista", "Revista não identificada")
+        grupos.setdefault(revista, []).append(item)
+    return grupos
+
+
+def badge_keywords(keywords):
+    """Renderiza as palavras-chave encontradas como pequenos marcadores HTML."""
+    if not keywords:
+        return ""
+    return " ".join(
+        f"<span style='display:inline-block;background:#E8F3F0;color:#0F6E56;"
+        f"border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;'>{escape(str(k))}</span>"
+        for k in keywords
+    )
+
+
 def construir_html(novos_artigos, matches_keywords, cfp_encontrados):
     hoje = datetime.now().strftime("%d/%m/%Y")
+    total_artigos = len(novos_artigos)
+    total_keywords = len(matches_keywords)
+    total_cfp = len(cfp_encontrados)
+
     html = f"""
-    <html><body style="font-family: Arial, sans-serif; max-width: 680px; margin: auto; color: #222;">
-    <h2 style="border-bottom: 2px solid #333; padding-bottom: 8px;">
-      📚 Monitor de Periódicos — {hoje}
-    </h2>
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 760px; margin: auto; color: #222; background:#F7F5F0; padding: 20px;">
+      <div style="background:#FFFFFF;border:1px solid #E2DDD5;border-radius:14px;padding:22px 24px;">
+        <h2 style="margin:0 0 6px 0; font-size:22px; color:#1A1714;">
+          📚 Monitor de Periódicos
+        </h2>
+        <p style="margin:0 0 18px 0; font-size:13px; color:#6B6560;">
+          Atualização de {hoje} · {total_artigos} artigo(s), {total_keywords} correspondência(s) de palavras-chave, {total_cfp} chamada(s)
+        </p>
+        <div style="display:block;border-top:1px solid #E2DDD5;margin:12px 0 18px 0;"></div>
     """
 
-    # Seção: novas edições / artigos
+    # Seção: novos artigos, agrupados por revista
     if novos_artigos:
-        html += """<h3 style="color:#185FA5;">📄 Novos artigos publicados</h3><ul>"""
-        for a in novos_artigos[:20]:  # limita a 20 por e-mail
+        html += """
+        <h3 style="font-size:17px;color:#185FA5;margin:0 0 12px 0;">📄 Novos artigos por revista</h3>
+        """
+        for revista, artigos in agrupar_por_revista(novos_artigos).items():
             html += f"""
-            <li style="margin-bottom:12px;">
-              <strong><a href="{a['link']}" style="color:#185FA5;">{a['titulo']}</a></strong><br>
-              <span style="font-size:12px; color:#666;">{a['revista']} · {a['publicado']}</span>
-              {f"<br><span style='font-size:13px; color:#444;'>{a['resumo']}</span>" if a.get('resumo') else ''}
-            </li>"""
-        if len(novos_artigos) > 20:
-            html += f"<li style='color:#666;'>... e mais {len(novos_artigos)-20} artigos.</li>"
-        html += "</ul>"
+            <div style="border:1px solid #E8EEF8;background:#FAFCFF;border-radius:12px;padding:14px 16px;margin:0 0 14px 0;">
+              <h4 style="font-size:16px;color:#1A1714;margin:0 0 10px 0;">{escape(revista)}</h4>
+            """
+            for a in artigos[:20]:
+                titulo = escape(a.get("titulo", "Sem título"))
+                link = escape(a.get("link", "#"), quote=True)
+                publicado = escape(a.get("publicado", ""))
+                resumo = escape(a.get("resumo", ""))
+                html += f"""
+                <div style="padding:10px 0;border-top:1px solid #E2DDD5;">
+                  <div style="font-size:14px;font-weight:bold;line-height:1.4;">
+                    <a href="{link}" style="color:#185FA5;text-decoration:none;">{titulo}</a>
+                  </div>
+                  <div style="font-size:12px;color:#6B6560;margin-top:3px;">{publicado}</div>
+                  {f"<div style='font-size:13px;color:#444;line-height:1.5;margin-top:6px;'>{resumo}</div>" if resumo else ""}
+                </div>
+                """
+            if len(artigos) > 20:
+                html += f"<p style='font-size:12px;color:#6B6560;margin:8px 0 0 0;'>... e mais {len(artigos)-20} artigo(s) nesta revista.</p>"
+            html += "</div>"
 
-    # Seção: matches de palavras-chave
+    # Seção: matches de palavras-chave, separada e agrupada por revista
     if matches_keywords:
-        html += """<h3 style="color:#0F6E56;">🔍 Correspondências de palavras-chave</h3><ul>"""
-        for m in matches_keywords:
-            kws = ", ".join(f"<code>{k}</code>" for k in m["keywords"])
+        html += """
+        <h3 style="font-size:17px;color:#0F6E56;margin:22px 0 12px 0;">🔍 Correspondências de palavras-chave</h3>
+        <p style="font-size:13px;color:#6B6560;margin:0 0 12px 0;">Itens em que os termos cadastrados apareceram nos campos monitorados pelo sistema.</p>
+        """
+        for revista, matches in agrupar_por_revista(matches_keywords).items():
             html += f"""
-            <li style="margin-bottom:12px;">
-              <strong><a href="{m['link']}" style="color:#0F6E56;">{m['titulo']}</a></strong><br>
-              <span style="font-size:12px; color:#666;">{m['revista']} · {m['publicado']}</span><br>
-              <span style="font-size:12px;">Palavras encontradas: {kws}</span>
-            </li>"""
-        html += "</ul>"
+            <div style="border:1px solid #CFE4DE;background:#F8FCFB;border-radius:12px;padding:14px 16px;margin:0 0 14px 0;">
+              <h4 style="font-size:16px;color:#1A1714;margin:0 0 10px 0;">{escape(revista)}</h4>
+            """
+            for m in matches:
+                titulo = escape(m.get("titulo", "Sem título"))
+                link = escape(m.get("link", "#"), quote=True)
+                publicado = escape(m.get("publicado", ""))
+                kws = badge_keywords(m.get("keywords", []))
+                html += f"""
+                <div style="padding:10px 0;border-top:1px solid #E2DDD5;">
+                  <div style="font-size:14px;font-weight:bold;line-height:1.4;">
+                    <a href="{link}" style="color:#0F6E56;text-decoration:none;">{titulo}</a>
+                  </div>
+                  <div style="font-size:12px;color:#6B6560;margin-top:3px;">{publicado}</div>
+                  <div style="font-size:12px;color:#333;margin-top:6px;">Palavras encontradas: {kws}</div>
+                </div>
+                """
+            html += "</div>"
 
-    # Seção: calls for papers
+    # Seção: calls for papers / special issues
     if cfp_encontrados:
-        html += """<h3 style="color:#854F0B;">📢 Chamadas de artigos (Call for Papers)</h3><ul>"""
-        for c in cfp_encontrados:
+        html += """
+        <h3 style="font-size:17px;color:#854F0B;margin:22px 0 12px 0;">📢 Chamadas de artigos e special issues</h3>
+        """
+        for revista, chamadas in agrupar_por_revista(cfp_encontrados).items():
             html += f"""
-            <li style="margin-bottom:12px;">
-              <strong><a href="{c['link']}" style="color:#854F0B;">{c['titulo']}</a></strong><br>
-              <span style="font-size:12px; color:#666;">{c['revista']} · {c['publicado']}</span>
-            </li>"""
-        html += "</ul>"
+            <div style="border:1px solid #F1D8A8;background:#FFFDF7;border-radius:12px;padding:14px 16px;margin:0 0 14px 0;">
+              <h4 style="font-size:16px;color:#1A1714;margin:0 0 10px 0;">{escape(revista)}</h4>
+            """
+            for c in chamadas:
+                titulo = escape(c.get("titulo", "Sem título"))
+                link = escape(c.get("link", "#"), quote=True)
+                publicado = escape(c.get("publicado", ""))
+                html += f"""
+                <div style="padding:10px 0;border-top:1px solid #E2DDD5;">
+                  <div style="font-size:14px;font-weight:bold;line-height:1.4;">
+                    <a href="{link}" style="color:#854F0B;text-decoration:none;">{titulo}</a>
+                  </div>
+                  <div style="font-size:12px;color:#6B6560;margin-top:3px;">{publicado}</div>
+                </div>
+                """
+            html += "</div>"
 
     if not any([novos_artigos, matches_keywords, cfp_encontrados]):
         html += "<p style='color:#666;'>Nenhuma novidade desde a última verificação.</p>"
 
     html += """
-    <hr style="margin-top:24px; border:none; border-top:1px solid #ddd;">
-    <p style="font-size:11px; color:#aaa; text-align:center;">
-      Monitor de Periódicos · gerado automaticamente
-    </p>
-    </body></html>"""
+        <div style="display:block;border-top:1px solid #E2DDD5;margin:22px 0 12px 0;"></div>
+        <p style="font-size:11px; color:#9E9890; text-align:center; margin:0;">
+          Monitor de Periódicos · gerado automaticamente via GitHub Actions
+        </p>
+      </div>
+    </body>
+    </html>
+    """
     return html
-
 
 # ── Envio de e-mail ────────────────────────────────────────────────────────────
 
