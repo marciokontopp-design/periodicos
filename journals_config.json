@@ -77,6 +77,55 @@
       "base": "Taylor & Francis",
       "issn": "1522-7200",
       "monitorar_cfp": true
+    },
+    {
+      "nome": "EURE – Revista Latinoamericana de Estudios Urbano Regionales",
+      "rss": "https://www.eure.cl/index.php/eure/gateway/plugin/WebFeedGatewayPlugin/rss2",
+      "base": "Outro",
+      "issn": "0717-6236",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Revista Brasileira de Estudos Urbanos e Regionais — RBEUR",
+      "rss": "https://rbeur.anpur.org.br/rbeur/gateway/plugin/WebFeedGatewayPlugin/rss2",
+      "base": "",
+      "issn": "1517-4115",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Cadernos Metrópole",
+      "rss": "https://revistas.pucsp.br/metropole/gateway/plugin/WebFeedGatewayPlugin/rss2",
+      "base": "Outro",
+      "issn": "1517-2422",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "urbe. Revista Brasileira de Gestão Urbana",
+      "rss": "https://periodicos.pucpr.br/Urbe/gateway/plugin/WebFeedGatewayPlugin/rss2",
+      "base": "Outro",
+      "issn": "2175-3369",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Revista Brasileira de Estudos Regionais e Urbanos — RBERU",
+      "rss": "https://revistaaber.org.br/rberu/gateway/plugin/WebFeedGatewayPlugin/rss2",
+      "base": "Outro",
+      "issn": "1981-3953",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Revista de Administração Pública — RAP",
+      "rss": "https://www.scielo.br/j/rap/rss.xml",
+      "base": "SciELO",
+      "issn": "0034-7612",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Ambiente & Sociedade",
+      "rss": "https://www.scielo.br/j/asoc/rss.xml",
+      "base": "SciELO",
+      "issn": "1414-753X",
+      "monitorar_cfp": true
     }
   ],
   "palavras_chave": [
