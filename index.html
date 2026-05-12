@@ -449,18 +449,18 @@ input:focus, select:focus, textarea:focus {
       <p class="sec-title">E-mail</p>
       <div class="form-group">
         <label class="form-label">Destinatário dos alertas</label>
-        <input type="email" id="email-dest" placeholder="seu@email.com" oninput="updateMetrics()" />
+        <input type="email" id="email-dest" placeholder="seu@email.com" oninput="saveUiState(); updateMetrics(); refreshPreview()" />
       </div>
       <div class="form-group">
         <label class="form-label">Conta Gmail remetente</label>
-        <input type="email" id="email-from" placeholder="conta@gmail.com" />
+        <input type="email" id="email-from" placeholder="conta@gmail.com" oninput="saveUiState(); refreshPreview()" />
         <p class="form-hint">Use uma senha de app do Gmail — veja instruções no README.</p>
       </div>
     </div>
     <div class="card">
       <p class="sec-title">Periodicidade padrão</p>
       <div class="form-group" style="margin-bottom:0">
-        <select id="global-freq" onchange="updateMetrics()">
+        <select id="global-freq" onchange="saveUiState(); updateMetrics(); refreshPreview()">
           <option value="daily">Diariamente (todo dia às 8h, horário de Brasília)</option>
           <option value="weekly" selected>Semanalmente (toda segunda às 8h)</option>
           <option value="biweekly">Quinzenalmente</option>
@@ -488,15 +488,15 @@ input:focus, select:focus, textarea:focus {
   <!-- PAGE: Exportar -->
   <div id="page-export" class="page">
     <div class="page-header">
-      <h2>Exportar configuração</h2>
-      <p>Baixe o arquivo e coloque no seu repositório do GitHub</p>
+      <h2>Salvar configuração</h2>
+      <p>Atualize o arquivo de configuração no GitHub e, se quiser, rode o monitor imediatamente</p>
     </div>
 
     <div class="export-main">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div>
           <div style="font-size:15px;font-weight:500;color:var(--text)">journals_config.json</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">Gerado a partir do painel</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Prévia da configuração gerada a partir do painel</div>
         </div>
         <button class="btn btn-teal" onclick="exportConfig()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -508,11 +508,11 @@ input:focus, select:focus, textarea:focus {
 
     <div class="card" style="margin-top:4px">
       <p class="sec-title">Salvar diretamente no GitHub</p>
-      <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px">Cole um token do GitHub com permissão de escrita neste repositório. O token fica apenas nesta aba do navegador e não é salvo no arquivo.</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px">Cole um token do GitHub com permissão de escrita neste repositório. O botão preto apenas salva a configuração; o botão verde salva e executa o monitor imediatamente. O token fica apenas nesta aba do navegador e não é salvo no arquivo.</p>
       <div class="form-group">
         <label class="form-label">Token do GitHub</label>
         <input type="password" id="github-token" placeholder="github_pat_..." autocomplete="off" />
-        <p class="form-hint">Use um token fine-grained com Contents: Read and write. Para também rodar o monitor, inclua Actions: Read and write.</p>
+        <p class="form-hint">Para salvar: Contents: Read and write. Para salvar e rodar agora: inclua também Actions: Read and write.</p>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="form-group">
@@ -547,28 +547,28 @@ input:focus, select:focus, textarea:focus {
         <div class="step-card" style="padding:1rem;border-radius:var(--radius);margin-bottom:0">
           <div class="step-num">1</div>
           <div>
-            <div style="font-size:14px;font-weight:500;color:var(--teal)">Baixe o arquivo acima</div>
-            <div style="font-size:12px;color:var(--teal);opacity:.8;margin-top:2px">Substitui o <code>journals_config.json</code> de exemplo no repositório</div>
+            <div style="font-size:14px;font-weight:500;color:var(--teal)">Configure revistas, palavras-chave e e-mail</div>
+            <div style="font-size:12px;color:var(--teal);opacity:.8;margin-top:2px">O campo remetente deve ser o mesmo Gmail usado para gerar a senha de app salva no GitHub.</div>
           </div>
         </div>
         <div style="padding-left:4px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">2</span>Suba para o repositório GitHub</div>
-          <div style="font-size:12px;color:var(--text3);padding-left:36px">Arraste o arquivo para a página do repositório ou use "Add file → Upload"</div>
+          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">2</span>Salvar JSON no GitHub</div>
+          <div style="font-size:12px;color:var(--text3);padding-left:36px">Atualiza apenas o <code>journals_config.json</code>. O monitor usará essa configuração na próxima execução automática.</div>
         </div>
         <div style="padding-left:4px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">3</span>Teste rodando manualmente</div>
-          <div style="font-size:12px;color:var(--text3);padding-left:36px">Actions → Monitor de Periódicos → Run workflow</div>
+          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">3</span>Salvar e rodar monitor agora</div>
+          <div style="font-size:12px;color:var(--text3);padding-left:36px">Atualiza o <code>journals_config.json</code> e dispara imediatamente o workflow do GitHub Actions.</div>
         </div>
         <div style="padding-left:4px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-teal" style="margin-right:6px">✓</span>Pronto — roda automaticamente</div>
-          <div style="font-size:12px;color:var(--text3);padding-left:36px">Na periodicidade configurada, você receberá o e-mail com as novidades</div>
+          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-teal" style="margin-right:6px">✓</span>Execução automática permanece ativa</div>
+          <div style="font-size:12px;color:var(--text3);padding-left:36px">Mesmo sem teste manual, o monitor continuará rodando na periodicidade configurada.</div>
         </div>
       </div>
     </div>
 
     <div class="card" style="margin-top:4px">
       <p class="sec-title">Atualizar no futuro</p>
-      <p style="font-size:13px;color:var(--text2);line-height:1.7">Adicionou uma nova revista? Volte aqui, edite, baixe o arquivo e substitua no GitHub. O script usará a versão mais recente na próxima execução — sem precisar alterar nada no código.</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7">Sempre que incluir ou remover revistas, alterar palavras-chave ou modificar o e-mail, faça a mudança no painel e clique em <strong>Salvar JSON no GitHub</strong>. Use <strong>Salvar e rodar monitor agora</strong> apenas quando quiser testar imediatamente a nova configuração. O botão <strong>Baixar arquivo</strong> fica disponível apenas como cópia de segurança.</p>
     </div>
   </div>
 
@@ -739,11 +739,57 @@ function renderKeywords() {
   ).join('')}</div>`;
 }
 
+function saveUiState() {
+  const dest = document.getElementById('email-dest')?.value?.trim() || '';
+  const from = document.getElementById('email-from')?.value?.trim() || '';
+  const freq = document.getElementById('global-freq')?.value || 'weekly';
+  if (dest) localStorage.setItem('mp_email_dest', dest);
+  if (from) localStorage.setItem('mp_email_from', from);
+  localStorage.setItem('mp_global_freq', freq);
+}
+
+function loadUiState() {
+  const dest = localStorage.getItem('mp_email_dest') || localStorage.getItem('mp_email') || '';
+  const from = localStorage.getItem('mp_email_from') || '';
+  const freq = localStorage.getItem('mp_global_freq') || 'weekly';
+  const destEl = document.getElementById('email-dest');
+  const fromEl = document.getElementById('email-from');
+  const freqEl = document.getElementById('global-freq');
+  if (destEl && dest) destEl.value = dest;
+  if (fromEl && from) fromEl.value = from;
+  if (freqEl && FREQ_LABEL[freq]) freqEl.value = freq;
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isPlaceholderEmail(email) {
+  const normalized = (email || '').trim().toLowerCase();
+  return !normalized || ['seu@email.com', 'sua-conta@gmail.com', 'seuemail@gmail.com', 'seu-email-real@gmail.com', 'conta@gmail.com'].includes(normalized);
+}
+
+function validateConfigForSave() {
+  const erros = [];
+  const dest = document.getElementById('email-dest').value.trim();
+  const from = document.getElementById('email-from').value.trim();
+  if (!journals.length) erros.push('Adicione ao menos uma revista.');
+  if (isPlaceholderEmail(dest) || !isValidEmail(dest)) erros.push('Preencha um e-mail destinatário real em Configurações.');
+  if (isPlaceholderEmail(from) || !isValidEmail(from)) erros.push('Preencha um Gmail remetente real em Configurações.');
+  if (from && !from.toLowerCase().endsWith('@gmail.com')) erros.push('O remetente precisa ser uma conta Gmail, pois o envio usa smtp.gmail.com.');
+  if (erros.length) {
+    alert(erros.join('\n'));
+    goTo('config');
+    return false;
+  }
+  return true;
+}
+
 function updateMetrics() {
   document.getElementById('m-journals').textContent = journals.length;
   document.getElementById('m-keywords').textContent = keywords.length;
   const email = (document.getElementById('email-dest') || {}).value || '';
-  const stored = localStorage.getItem('mp_email') || '';
+  const stored = localStorage.getItem('mp_email_dest') || localStorage.getItem('mp_email') || '';
   document.getElementById('m-email').textContent = email || stored || '—';
   const freq = (document.getElementById('global-freq') || {}).value || 'weekly';
   document.getElementById('m-freq').textContent = FREQ_LABEL[freq] || 'Semanal';
@@ -753,11 +799,11 @@ function buildConfig() {
   const freq = document.getElementById('global-freq').value;
   const dest = document.getElementById('email-dest').value.trim();
   const from = document.getElementById('email-from').value.trim();
-  if (dest) localStorage.setItem('mp_email', dest);
+  saveUiState();
   return {
     email: {
-      destinatario: dest || 'seu@email.com',
-      remetente: from || 'sua-conta@gmail.com',
+      destinatario: dest,
+      remetente: from,
       smtp_server: 'smtp.gmail.com',
       smtp_port: 587
     },
@@ -780,7 +826,7 @@ function refreshPreview() {
 }
 
 function exportConfig() {
-  if (!journals.length) { alert('Adicione ao menos uma revista antes de exportar.'); return; }
+  if (!validateConfigForSave()) return;
   const blob = new Blob([JSON.stringify(buildConfig(), null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -820,7 +866,7 @@ async function githubRequest(url, options = {}) {
 async function saveConfigToGitHub(runAfterSave = false) {
   const status = document.getElementById('github-status');
   try {
-    if (!journals.length) { alert('Adicione ao menos uma revista antes de salvar.'); return; }
+    if (!validateConfigForSave()) return;
     status.textContent = 'Preparando configuração...';
     const owner = document.getElementById('github-owner').value.trim();
     const repo = document.getElementById('github-repo').value.trim();
@@ -865,9 +911,11 @@ document.getElementById('modal-wrap').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+loadUiState();
 renderJournals();
 renderKeywords();
 updateMetrics();
+refreshPreview();
 </script>
 </body>
 </html>
