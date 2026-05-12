@@ -390,13 +390,9 @@ input:focus, select:focus, textarea:focus {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
       Leitor RSS
     </button>
-    <button class="nav-item" onclick="goTo('export')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar config
-    </button>
   </nav>
   <div class="sidebar-footer">
-    <p>Configure as revistas e palavras-chave, salve o <code>journals_config.json</code> no GitHub e acompanhe os feeds no leitor RSS.</p>
+    <p>Configure revistas, palavras-chave, e-mail e integração com GitHub. Use o leitor RSS para visualizar rapidamente os feeds cadastrados.</p>
   </div>
 </aside>
 
@@ -463,20 +459,23 @@ input:focus, select:focus, textarea:focus {
   <div id="page-config" class="page">
     <div class="page-header">
       <h2>Configurações</h2>
-      <p>E-mail e periodicidade dos alertas</p>
+      <p>E-mail, periodicidade, integração com GitHub e execução do monitor</p>
     </div>
+
     <div class="card">
       <p class="sec-title">E-mail</p>
       <div class="form-group">
         <label class="form-label">Destinatário dos alertas</label>
         <input type="email" id="email-dest" placeholder="seu@email.com" oninput="saveUiState(); updateMetrics(); refreshPreview()" />
+        <p class="form-hint">E-mail que receberá os alertas gerados pelo monitor.</p>
       </div>
       <div class="form-group">
         <label class="form-label">Conta Gmail remetente</label>
         <input type="email" id="email-from" placeholder="conta@gmail.com" oninput="saveUiState(); refreshPreview()" />
-        <p class="form-hint">Use uma senha de app do Gmail — veja instruções no README.</p>
+        <p class="form-hint">Deve ser o mesmo Gmail usado para gerar a senha de app salva no GitHub como <code>EMAIL_SENHA</code>.</p>
       </div>
     </div>
+
     <div class="card">
       <p class="sec-title">Periodicidade padrão</p>
       <div class="form-group" style="margin-bottom:0">
@@ -486,8 +485,10 @@ input:focus, select:focus, textarea:focus {
           <option value="biweekly">Quinzenalmente</option>
           <option value="monthly">Mensalmente (todo dia 1º)</option>
         </select>
+        <p class="form-hint">A periodicidade efetiva do agendamento é definida no workflow do GitHub Actions. Este campo fica registrado no JSON para controle do painel.</p>
       </div>
     </div>
+
     <div class="card">
       <p class="sec-title">Tipos de alerta</p>
       <div class="toggle-row">
@@ -503,6 +504,53 @@ input:focus, select:focus, textarea:focus {
         <label class="toggle"><input type="checkbox" id="alert-cfp" checked /><span class="tog-track"></span></label>
       </div>
     </div>
+
+    <div class="card">
+      <p class="sec-title">Integração com GitHub</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px">Use esta seção para salvar a configuração diretamente no repositório. O token fica apenas nesta aba do navegador e não é gravado no arquivo.</p>
+      <div class="form-group">
+        <label class="form-label">Token do GitHub</label>
+        <input type="password" id="github-token" placeholder="github_pat_..." autocomplete="off" />
+        <p class="form-hint">Para salvar: <strong>Contents: Read and write</strong>. Para salvar e rodar agora: inclua também <strong>Actions: Read and write</strong>.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group">
+          <label class="form-label">Dono do repositório</label>
+          <input type="text" id="github-owner" value="marciokontopp-design" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Repositório</label>
+          <input type="text" id="github-repo" value="periodicos" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group">
+          <label class="form-label">Branch</label>
+          <input type="text" id="github-branch" value="main" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Arquivo</label>
+          <input type="text" id="github-path" value="journals_config.json" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn btn-dark" onclick="saveConfigToGitHub(false)">Salvar configuração no GitHub</button>
+        <button class="btn btn-teal" onclick="saveConfigToGitHub(true)">Salvar e rodar monitor agora</button>
+      </div>
+      <div id="github-status" style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6"></div>
+    </div>
+
+    <div class="card" style="margin-top:4px">
+      <p class="sec-title">Fluxo recomendado</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7">Depois de alterar revistas, palavras-chave ou e-mail, clique em <strong>Salvar configuração no GitHub</strong>. Use <strong>Salvar e rodar monitor agora</strong> apenas quando quiser testar imediatamente. A execução automática continuará acontecendo pelo GitHub Actions.</p>
+    </div>
+
+    <details class="card" style="margin-top:4px">
+      <summary style="cursor:pointer;font-size:13px;font-weight:500;color:var(--text)">Configuração técnica avançada</summary>
+      <p style="font-size:12px;color:var(--text3);line-height:1.6;margin:10px 0">Prévia do <code>journals_config.json</code> gerado pelo painel. O download é mantido apenas como cópia de segurança.</p>
+      <div id="config-preview" class="code-box">Configure ao menos uma revista para visualizar...</div>
+      <button class="btn btn-outline" style="margin-top:12px" onclick="exportConfig()">Baixar cópia de segurança do JSON</button>
+    </details>
   </div>
 
 
@@ -527,93 +575,6 @@ input:focus, select:focus, textarea:focus {
       <div id="reader-status" class="reader-status">Clique em “Atualizar leitor” para carregar a configuração publicada e consultar os feeds.</div>
     </div>
     <div id="reader-results"></div>
-  </div>
-
-  <!-- PAGE: Exportar -->
-  <div id="page-export" class="page">
-    <div class="page-header">
-      <h2>Salvar configuração</h2>
-      <p>Atualize o arquivo de configuração no GitHub e, se quiser, rode o monitor imediatamente</p>
-    </div>
-
-    <div class="export-main">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <div style="font-size:15px;font-weight:500;color:var(--text)">journals_config.json</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">Prévia da configuração gerada a partir do painel</div>
-        </div>
-        <button class="btn btn-teal" onclick="exportConfig()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Baixar arquivo
-        </button>
-      </div>
-      <div id="config-preview" class="code-box">Configure ao menos uma revista para visualizar...</div>
-    </div>
-
-    <div class="card" style="margin-top:4px">
-      <p class="sec-title">Salvar diretamente no GitHub</p>
-      <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px">Cole um token do GitHub com permissão de escrita neste repositório. O botão preto apenas salva a configuração; o botão verde salva e executa o monitor imediatamente. O token fica apenas nesta aba do navegador e não é salvo no arquivo.</p>
-      <div class="form-group">
-        <label class="form-label">Token do GitHub</label>
-        <input type="password" id="github-token" placeholder="github_pat_..." autocomplete="off" />
-        <p class="form-hint">Para salvar: Contents: Read and write. Para salvar e rodar agora: inclua também Actions: Read and write.</p>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="form-group">
-          <label class="form-label">Dono do repositório</label>
-          <input type="text" id="github-owner" value="marciokontopp-design" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Repositório</label>
-          <input type="text" id="github-repo" value="periodicos" />
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="form-group">
-          <label class="form-label">Branch</label>
-          <input type="text" id="github-branch" value="main" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Arquivo</label>
-          <input type="text" id="github-path" value="journals_config.json" />
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-dark" onclick="saveConfigToGitHub(false)">Salvar JSON no GitHub</button>
-        <button class="btn btn-teal" onclick="saveConfigToGitHub(true)">Salvar e rodar monitor agora</button>
-      </div>
-      <div id="github-status" style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6"></div>
-    </div>
-
-    <div class="card">
-      <p class="sec-title">Como usar</p>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="step-card" style="padding:1rem;border-radius:var(--radius);margin-bottom:0">
-          <div class="step-num">1</div>
-          <div>
-            <div style="font-size:14px;font-weight:500;color:var(--teal)">Configure revistas, palavras-chave e e-mail</div>
-            <div style="font-size:12px;color:var(--teal);opacity:.8;margin-top:2px">O campo remetente deve ser o mesmo Gmail usado para gerar a senha de app salva no GitHub.</div>
-          </div>
-        </div>
-        <div style="padding-left:4px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">2</span>Salvar JSON no GitHub</div>
-          <div style="font-size:12px;color:var(--text3);padding-left:36px">Atualiza apenas o <code>journals_config.json</code>. O monitor usará essa configuração na próxima execução automática.</div>
-        </div>
-        <div style="padding-left:4px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-gray" style="margin-right:6px">3</span>Salvar e rodar monitor agora</div>
-          <div style="font-size:12px;color:var(--text3);padding-left:36px">Atualiza o <code>journals_config.json</code> e dispara imediatamente o workflow do GitHub Actions.</div>
-        </div>
-        <div style="padding-left:4px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px"><span class="badge badge-teal" style="margin-right:6px">✓</span>Execução automática permanece ativa</div>
-          <div style="font-size:12px;color:var(--text3);padding-left:36px">Mesmo sem teste manual, o monitor continuará rodando na periodicidade configurada.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:4px">
-      <p class="sec-title">Atualizar no futuro</p>
-      <p style="font-size:13px;color:var(--text2);line-height:1.7">Sempre que incluir ou remover revistas, alterar palavras-chave ou modificar o e-mail, faça a mudança no painel e clique em <strong>Salvar JSON no GitHub</strong>. Use <strong>Salvar e rodar monitor agora</strong> apenas quando quiser testar imediatamente a nova configuração. O botão <strong>Baixar arquivo</strong> fica disponível apenas como cópia de segurança.</p>
-    </div>
   </div>
 
 </main>
@@ -689,10 +650,10 @@ function save() {
 function goTo(name) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  const names = ['journals','keywords','config','reader','export'];
+  const names = ['journals','keywords','config','reader'];
   document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
   document.getElementById('page-' + name).classList.add('active');
-  if (name === 'export') refreshPreview();
+  if (name === 'config') refreshPreview();
   if (name === 'reader' && !window.readerItems) loadRssReader();
 }
 
