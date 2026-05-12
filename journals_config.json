@@ -1,7 +1,7 @@
 {
   "email": {
-    "destinatario": "marciokontopp@gmail.com",
-    "remetente": "marciokontopp@gmail.com",
+    "destinatario": "seu@email.com",
+    "remetente": "sua-conta@gmail.com",
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587
   },
@@ -9,41 +9,17 @@
   "cron": "0 11 * * 1",
   "revistas": [
     {
-      "nome": "Research Policy",
-      "rss": "https://rss.sciencedirect.com/publication/science/00487333",
-      "base": "Elsevier / ScienceDirect",
-      "issn": "0048-7333",
+      "nome": "Governance",
+      "rss": "https://onlinelibrary.wiley.com/feed/14680491/most-recent",
+      "base": "Wiley",
+      "issn": "1468-0491",
       "monitorar_cfp": true
     }
   ],
-  "palavras_chave": [
-    "climate governance",
-    "urban climate governance",
-    "regional climate governance",
-    "climate adaptation",
-    "urban adaptation",
-    "policy capacity",
-    "state capacity",
-    "institutional capacity",
-    "multilevel governance",
-    "regional governance",
-    "intermunicipal cooperation",
-    "public consortia",
-    "urban resilience",
-    "climate resilience",
-    "municipal climate policy",
-    "local climate policy",
-    "participatory governance",
-    "collaborative governance",
-    "governança climática",
-    "adaptação climática",
-    "capacidades estatais",
-    "governança regional",
-    "consórcios intermunicipais"
-  ],
+  "palavras_chave": [],
   "escopo_busca": {
     "titulos": true,
     "resumos": true,
-    "palavras_chave_artigo": true
+    "palavras_chave_artigo": false
   }
 }
