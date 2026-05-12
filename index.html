@@ -390,6 +390,10 @@ input:focus, select:focus, textarea:focus {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
       Leitor RSS
     </button>
+    <button class="nav-item" onclick="goTo('cfp')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
+      Chamadas
+    </button>
   </nav>
   <div class="sidebar-footer">
     <p>Configure revistas, palavras-chave, e-mail e integração com GitHub. Use o leitor RSS para visualizar rapidamente os feeds cadastrados.</p>
@@ -577,6 +581,29 @@ input:focus, select:focus, textarea:focus {
     <div id="reader-results"></div>
   </div>
 
+  <!-- PAGE: Chamadas / CFP -->
+  <div id="page-cfp" class="page">
+    <div class="page-header">
+      <h2>Chamadas e special issues</h2>
+      <p>Itens dos RSS que parecem indicar chamadas de artigos, dossiês, números temáticos ou special issues</p>
+    </div>
+    <div class="card">
+      <p class="sec-title">Fonte e filtros</p>
+      <div class="reader-toolbar">
+        <button class="btn btn-dark" onclick="loadCfpReader()">Atualizar chamadas</button>
+        <select id="cfp-limit">
+          <option value="10">10 itens por revista</option>
+          <option value="20" selected>20 itens por revista</option>
+          <option value="50">50 itens por revista</option>
+        </select>
+        <input type="text" id="cfp-filter" placeholder="Filtrar por revista, termo ou chamada" oninput="renderCfpItems()" style="max-width:280px" />
+      </div>
+      <p class="form-hint">Esta seção usa os feeds RSS cadastrados e procura termos como <em>call for papers</em>, <em>special issue</em>, dossiê, número temático, chamada de artigos e equivalentes em português, inglês e espanhol. Nem todas as revistas divulgam chamadas no RSS; quando isso não ocorrer, a detecção continuará funcionando pelo e-mail apenas se a chamada aparecer no feed.</p>
+      <div id="cfp-status" class="reader-status">Clique em “Atualizar chamadas” para consultar os feeds cadastrados.</div>
+    </div>
+    <div id="cfp-results"></div>
+  </div>
+
 </main>
 </div>
 
@@ -650,11 +677,12 @@ function save() {
 function goTo(name) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  const names = ['journals','keywords','config','reader'];
+  const names = ['journals','keywords','config','reader','cfp'];
   document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
   document.getElementById('page-' + name).classList.add('active');
   if (name === 'config') refreshPreview();
   if (name === 'reader' && !window.readerItems) loadRssReader();
+  if (name === 'cfp' && !window.cfpItems) loadCfpReader();
 }
 
 function openModal() {
@@ -1001,6 +1029,20 @@ function linkOf(item) {
   return '';
 }
 
+const CFP_TERMS = [
+  'call for papers', 'call for contributions', 'call for abstracts', 'special issue', 'special section',
+  'thematic issue', 'guest editor', 'guest editors', 'submission deadline', 'deadline for submissions',
+  'chamada de artigos', 'chamada para artigos', 'chamada para submissões', 'dossiê', 'dossie',
+  'número temático', 'numero tematico', 'número especial', 'numero especial', 'seção especial',
+  'convocatoria', 'convocatoria de artículos', 'convocatoria de articulos', 'llamada a artículos',
+  'llamada a articulos', 'número monográfico', 'numero monografico', 'dossier temático', 'dossier tematico'
+];
+
+function isCfpText(title, summary) {
+  const haystack = `${title || ''} ${summary || ''}`.toLowerCase();
+  return CFP_TERMS.some(term => haystack.includes(term));
+}
+
 function parseFeed(text, journal) {
   const doc = new DOMParser().parseFromString(text, 'text/xml');
   const parseError = doc.querySelector('parsererror');
@@ -1020,7 +1062,8 @@ function parseFeed(text, journal) {
       link: linkOf(item),
       published,
       summary: cleanSummary,
-      keywords: foundKeywords
+      keywords: foundKeywords,
+      isCfp: isCfpText(title, cleanSummary)
     };
   });
 }
@@ -1077,6 +1120,74 @@ function renderReaderItems() {
           <h3>${escapeHtml(revista)}</h3>
           <div class="card-sub">${arr.length} item(ns) carregado(s)</div>
         </div>
+      </div>
+      ${arr.map(item => `
+        <div class="reader-item">
+          <div class="reader-item-title"><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></div>
+          <div class="reader-item-meta">${escapeHtml(formatFeedDate(item.published))}${item.isCfp ? ' · <span class="badge badge-amber">Chamada/CFP</span>' : ''}${item.keywords.length ? ' · Palavras-chave: ' + item.keywords.map(k => `<span class="badge badge-teal">${escapeHtml(k)}</span>`).join(' ') : ''}</div>
+          ${item.summary ? `<div class="reader-item-summary">${escapeHtml(item.summary)}${item.summary.length >= 450 ? '...' : ''}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+
+async function loadCfpReader() {
+  const status = document.getElementById('cfp-status');
+  const results = document.getElementById('cfp-results');
+  status.textContent = 'Carregando configuração publicada...';
+  const loaded = await loadConfigFromPublishedFile(false);
+  if (!loaded || !journals.length) {
+    status.textContent = 'Nenhuma revista encontrada no journals_config.json publicado. Salve a configuração no GitHub antes de atualizar chamadas.';
+    results.innerHTML = '';
+    return;
+  }
+  status.textContent = `Configuração carregada. Procurando chamadas em ${journals.length} feed(s) RSS...`;
+  results.innerHTML = '';
+  const all = [];
+  const errors = [];
+  const limit = Number(document.getElementById('cfp-limit').value || 20);
+  for (const journal of journals.filter(j => j.cfp !== false)) {
+    try {
+      const response = await fetch(rssProxyUrl(journal.rss));
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      const parsed = parseFeed(text, journal).slice(0, limit).filter(item => item.isCfp);
+      all.push(...parsed);
+    } catch (err) {
+      errors.push(`${journal.name}: ${err.message}`);
+    }
+  }
+  window.cfpItems = all;
+  renderCfpItems();
+  const baseMsg = all.length
+    ? `${all.length} possível(is) chamada(s) encontrada(s) nos RSS cadastrados.`
+    : 'Nenhuma chamada foi identificada nos RSS cadastrados nesta consulta.';
+  status.textContent = errors.length ? `${baseMsg} Alguns feeds não puderam ser lidos no navegador: ${errors.join(' | ')}` : baseMsg;
+}
+
+function renderCfpItems() {
+  const results = document.getElementById('cfp-results');
+  const items = window.cfpItems || [];
+  const filter = (document.getElementById('cfp-filter')?.value || '').trim().toLowerCase();
+  const filtered = filter ? items.filter(i => `${i.revista} ${i.title} ${i.summary} ${i.keywords.join(' ')}`.toLowerCase().includes(filter)) : items;
+  if (!filtered.length) {
+    results.innerHTML = `<div class="empty"><div class="empty-icon">CFP</div><p>Nenhuma chamada para exibir.<br>Algumas revistas divulgam chamadas fora do RSS, em páginas próprias de notícias, anúncios ou special issues.</p></div>`;
+    return;
+  }
+  const grouped = filtered.reduce((acc, item) => {
+    (acc[item.revista] ||= []).push(item);
+    return acc;
+  }, {});
+  results.innerHTML = Object.entries(grouped).map(([revista, arr]) => `
+    <div class="card reader-journal">
+      <div class="card-header">
+        <div>
+          <h3>${escapeHtml(revista)}</h3>
+          <div class="card-sub">${arr.length} possível(is) chamada(s)</div>
+        </div>
+        <span class="badge badge-amber">CFP</span>
       </div>
       ${arr.map(item => `
         <div class="reader-item">
