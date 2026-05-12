@@ -506,6 +506,41 @@ input:focus, select:focus, textarea:focus {
       <div id="config-preview" class="code-box">Configure ao menos uma revista para visualizar...</div>
     </div>
 
+    <div class="card" style="margin-top:4px">
+      <p class="sec-title">Salvar diretamente no GitHub</p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px">Cole um token do GitHub com permissão de escrita neste repositório. O token fica apenas nesta aba do navegador e não é salvo no arquivo.</p>
+      <div class="form-group">
+        <label class="form-label">Token do GitHub</label>
+        <input type="password" id="github-token" placeholder="github_pat_..." autocomplete="off" />
+        <p class="form-hint">Use um token fine-grained com Contents: Read and write. Para também rodar o monitor, inclua Actions: Read and write.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group">
+          <label class="form-label">Dono do repositório</label>
+          <input type="text" id="github-owner" value="marciokontopp-design" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Repositório</label>
+          <input type="text" id="github-repo" value="periodicos" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group">
+          <label class="form-label">Branch</label>
+          <input type="text" id="github-branch" value="main" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Arquivo</label>
+          <input type="text" id="github-path" value="journals_config.json" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-dark" onclick="saveConfigToGitHub(false)">Salvar JSON no GitHub</button>
+        <button class="btn btn-teal" onclick="saveConfigToGitHub(true)">Salvar e rodar monitor agora</button>
+      </div>
+      <div id="github-status" style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6"></div>
+    </div>
+
     <div class="card">
       <p class="sec-title">Como usar</p>
       <div style="display:flex;flex-direction:column;gap:14px">
@@ -751,6 +786,79 @@ function exportConfig() {
   a.href = URL.createObjectURL(blob);
   a.download = 'journals_config.json';
   a.click();
+}
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+async function githubRequest(url, options = {}) {
+  const token = document.getElementById('github-token').value.trim();
+  if (!token) throw new Error('Cole o token do GitHub antes de salvar.');
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': `Bearer ${token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(options.headers || {})
+    }
+  });
+  const text = await response.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!response.ok) {
+    const msg = data && data.message ? data.message : response.statusText;
+    throw new Error(`GitHub retornou ${response.status}: ${msg}`);
+  }
+  return data;
+}
+
+async function saveConfigToGitHub(runAfterSave = false) {
+  const status = document.getElementById('github-status');
+  try {
+    if (!journals.length) { alert('Adicione ao menos uma revista antes de salvar.'); return; }
+    status.textContent = 'Preparando configuração...';
+    const owner = document.getElementById('github-owner').value.trim();
+    const repo = document.getElementById('github-repo').value.trim();
+    const branch = document.getElementById('github-branch').value.trim() || 'main';
+    const path = document.getElementById('github-path').value.trim() || 'journals_config.json';
+    const configText = JSON.stringify(buildConfig(), null, 2) + '\n';
+
+    status.textContent = 'Buscando versão atual do arquivo no GitHub...';
+    const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
+    const current = await githubRequest(fileUrl);
+
+    status.textContent = 'Salvando journals_config.json no GitHub...';
+    await githubRequest(`https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Atualizar configuração pelo painel',
+        content: utf8ToBase64(configText),
+        sha: current.sha,
+        branch
+      })
+    });
+
+    status.textContent = 'Configuração salva no GitHub com sucesso.';
+
+    if (runAfterSave) {
+      status.textContent = 'Configuração salva. Iniciando workflow Monitor de Periódicos...';
+      await githubRequest(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/monitor.yml/dispatches`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: branch })
+      });
+      status.textContent = 'Configuração salva e workflow iniciado. Veja o resultado na aba Actions do repositório.';
+    }
+  } catch (err) {
+    status.textContent = 'Erro: ' + err.message;
+    console.error(err);
+  }
 }
 
 document.getElementById('modal-wrap').addEventListener('click', function(e) {
