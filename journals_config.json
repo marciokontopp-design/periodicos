@@ -7,78 +7,78 @@
   },
   "periodicidade": "daily",
   "cron": "0 11 * * *",
-  "revistas":[
-  {
-    "nome": "Climate Policy",
-    "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=tcpo20",
-    "base": "Taylor & Francis",
-    "issn": "1469-3062",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Environmental Science & Policy",
-    "rss": "https://rss.sciencedirect.com/publication/science/14629011",
-    "base": "Elsevier / ScienceDirect",
-    "issn": "1462-9011",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Urban Climate",
-    "rss": "https://rss.sciencedirect.com/publication/science/22120955",
-    "base": "Elsevier / ScienceDirect",
-    "issn": "2212-0955",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Global Environmental Change",
-    "rss": "https://rss.sciencedirect.com/publication/science/09593780",
-    "base": "Elsevier / ScienceDirect",
-    "issn": "0959-3780",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Cities",
-    "rss": "https://rss.sciencedirect.com/publication/science/02642751",
-    "base": "Elsevier / ScienceDirect",
-    "issn": "0264-2751",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Territory, Politics, Governance",
-    "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=rtep20",
-    "base": "Taylor & Francis",
-    "issn": "2162-2671",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Regional Studies",
-    "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=cres20",
-    "base": "Taylor & Francis",
-    "issn": "0034-3404",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Policy Sciences",
-    "rss": "https://link.springer.com/search.rss?query=&search-within=Journal&facet-journal-id=11077",
-    "base": "Springer",
-    "issn": "0032-2687",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Governance",
-    "rss": "https://onlinelibrary.wiley.com/action/showFeed?type=etoc&feed=rss&jc=14680491",
-    "base": "Wiley",
-    "issn": "0952-1895",
-    "monitorar_cfp": true
-  },
-  {
-    "nome": "Journal of Environmental Policy & Planning",
-    "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=cjoe20",
-    "base": "Taylor & Francis",
-    "issn": "1522-7200",
-    "monitorar_cfp": true
-  }
-],
+  "revistas": [
+    {
+      "nome": "Governance",
+      "rss": "https://onlinelibrary.wiley.com/feed/14680491/most-recent",
+      "base": "Wiley",
+      "issn": "1468-0491",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Climate Policy",
+      "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=tcpo20",
+      "base": "Taylor & Francis",
+      "issn": "1469-3062",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Environmental Science & Policy",
+      "rss": "https://rss.sciencedirect.com/publication/science/14629011",
+      "base": "Elsevier / ScienceDirect",
+      "issn": "1462-9011",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Urban Climate",
+      "rss": "https://rss.sciencedirect.com/publication/science/22120955",
+      "base": "Elsevier / ScienceDirect",
+      "issn": "2212-0955",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Global Environmental Change",
+      "rss": "https://rss.sciencedirect.com/publication/science/09593780",
+      "base": "Elsevier / ScienceDirect",
+      "issn": "0959-3780",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Cities",
+      "rss": "https://rss.sciencedirect.com/publication/science/02642751",
+      "base": "Elsevier / ScienceDirect",
+      "issn": "0264-2751",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Territory, Politics, Governance",
+      "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=rtep20",
+      "base": "Taylor & Francis",
+      "issn": "2162-2671",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Regional Studies",
+      "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=cres20",
+      "base": "Taylor & Francis",
+      "issn": "0034-3404",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Policy Sciences",
+      "rss": ": https://link.springer.com/search.rss?query=&search-within=Journal&facet-journal-id=11077",
+      "base": "Springer / Nature",
+      "issn": "0032-2687",
+      "monitorar_cfp": true
+    },
+    {
+      "nome": "Journal of Environmental Policy & Planning",
+      "rss": "https://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=cjoe20",
+      "base": "Taylor & Francis",
+      "issn": "1522-7200",
+      "monitorar_cfp": true
+    }
+  ],
   "palavras_chave": [
     "governance",
     "governança"
